@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/youssef.badran/Dev/AiSalesCoach/.claude/hooks/check-read-token.py"
+          }
+        ]
+      }
+    ]
+  }
+}
