@@ -162,3 +162,50 @@ Returnér en præcis implementeringsplan med konkrete navne — ikke generiske b
 - Du implementerer ikke kode — du planlægger kun
 - Du gætter ikke på klassnavne der ikke findes i kodebasen
 - Du bygger ikke mere end der er bedt om (YAGNI)
+
+## Output Contract — handoff til downstream agenter
+
+Når du returnerer en plan (interaktivt eller i workflow), skal den ALTID indeholde præcise navne i dette format:
+
+**Contracts (handshake-punkt — frontend kan ikke starte før dette er klar):**
+```
+LoginRequest(string Email, string Password)
+LoginResponse(string AccessToken, string RefreshToken, DateTime ExpiresAt)
+```
+
+**Domain:**
+```
+Entitet: Session (Id, UserId, ProjectId, Status, StartedAt, EndedAt)
+Interface: ISessionRepository (GetByIdAsync, CreateAsync, UpdateAsync)
+Value object: SessionStatus (enum: Active, Paused, Ended)
+```
+
+**Application (use cases):**
+```
+StartSessionCommand + StartSessionCommandHandler + StartSessionCommandValidator
+EndSessionCommand + EndSessionCommandHandler
+```
+
+**Infrastructure:**
+```
+SessionRepository : ISessionRepository (EF Core)
+SessionConfiguration : IEntityTypeConfiguration<Session>
+```
+
+**Api:**
+```
+POST /api/sessions → StartSessionRequest → StartSessionResponse
+PUT  /api/sessions/{id}/end → (empty body) → SessionResponse
+```
+
+**Flags:**
+```
+needs_migration: true/false
+needs_desktop: true/false  (+ hvilke ViewModels/Views)
+needs_web: true/false      (+ hvilke Pages/Components/Hooks)
+needs_extension: true/false
+needs_ui_design: true/false
+risks: ["GDPR: optagelse kræver samtykke", "AI: customer_state injection"]
+```
+
+Downstream agenter (`dotnet-developer`, `desktop-developer`, `react-developer`) bruger dette output som kontrakt. Præcisionen her bestemmer kvaliteten af al efterfølgende kode.

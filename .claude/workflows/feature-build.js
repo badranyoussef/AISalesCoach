@@ -1,14 +1,16 @@
 export const meta = {
   name: 'feature-build',
-  description: 'Byg AiSalesCoach feature end-to-end: planner → domain+contracts (parallelt) → application → infrastructure → api → clients (parallelt) → review (parallelt)',
+  description: 'Byg AiSalesCoach feature end-to-end: planner → domain+contracts (parallelt) → application → tests → infrastructure → api → clients (parallelt) → review (parallelt) → retro',
   phases: [
     { title: 'Plan', detail: 'planner returnerer struktureret implementeringsplan' },
     { title: 'Domain + Contracts', detail: 'Domain entiteter og Contracts DTOs bygges parallelt' },
     { title: 'Application', detail: 'MediatR use cases + FluentValidation validators' },
+    { title: 'Tests', detail: 'tdd-guide skriver xUnit tests for Application use cases (min. 80% dækning)' },
     { title: 'Infrastructure', detail: 'EF Core repositories, JWT, Deepgram, DI-registrering' },
     { title: 'Api', detail: 'ASP.NET Core controllers og endpoints' },
     { title: 'Clients', detail: 'Desktop + Web + Extension bygges parallelt' },
     { title: 'Review', detail: 'csharp-reviewer + arch-guardian + security-reviewer parallelt' },
+    { title: 'Retro', detail: 'opdater lessons-learned.md med mønstre og beslutninger fra byggeriet' },
   ],
 }
 
@@ -108,12 +110,31 @@ Opgave:
   { label: 'application', phase: 'Application', agentType: 'dotnet-developer' }
 )
 
+// ── Phase 3b: Tests ────────────────────────────────────────────────────────
+phase('Tests')
+await agent(
+  `Du er tdd-guide for AiSalesCoach. Skriv unit tests for feature: "${feature}".
+
+Application-laget er implementeret. Implementeringsplan:
+${JSON.stringify(plan, null, 2)}
+
+Opgave:
+- Skriv xUnit tests for: ${plan.use_cases.join(', ')}
+- Navngivning: MethodName_Scenario_ExpectedResult
+- Brug in-memory SQLite (Microsoft.EntityFrameworkCore.InMemory) til repository tests — ALDRIG mock DbContext direkte
+- Test minimum 3 scenarier per use case: success-path + validation-failure + edge case (not-found/unauthorized)
+- Minimum 80% dækning af de nye Application use cases
+- Placér i: tests/AiSalesCoach.Application.Tests/UseCases/<FeatureName>/
+- Afslut med: dotnet test tests/AiSalesCoach.Application.Tests/ --collect:"XPlat Code Coverage" — rapportér dækningsprocent`,
+  { label: 'tests', phase: 'Tests', agentType: 'tdd-guide' }
+)
+
 // ── Phase 4: Infrastructure ────────────────────────────────────────────────
 phase('Infrastructure')
 await agent(
   `Du er dotnet-developer for AiSalesCoach. Implementér Infrastructure-laget for feature: "${feature}".
 
-Application er klar. Implementeringsplan:
+Application og Tests er klar. Implementeringsplan:
 ${JSON.stringify(plan, null, 2)}
 
 Opgave:
@@ -198,7 +219,8 @@ ${JSON.stringify(plan, null, 2)}
 
 Opgave: ${plan.web_changes.join(', ')}
 - React 19 + TypeScript strict mode (ingen any)
-- React Query til alle API-kald, shadcn/ui + Tailwind`,
+- React Query til alle API-kald, shadcn/ui + Tailwind
+- Zustand til global session-state`,
     { label: 'web', phase: 'Clients', agentType: 'react-developer' }
   ))
 }
@@ -266,6 +288,11 @@ Fokus: prompt injection via audio-input, output-validering, hallucination i coac
 }
 
 await parallel(reviewTasks)
+
+// ── Phase 8: Retro ─────────────────────────────────────────────────────────
+phase('Retro')
+log('Opdaterer lessons-learned.md med mønstre fra denne build...')
+await workflow('retro', { context: `Feature bygget: "${feature}". Summary: ${plan.summary}. Risks: ${risksStr || 'none'}.` })
 
 log('Build komplet. Kør: dotnet test AiSalesCoach.sln')
 return { feature: feature, summary: plan.summary }

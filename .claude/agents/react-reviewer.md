@@ -165,6 +165,45 @@ Fix: Concrete recommended change.
 
 Always include the file path and line number. Quote the offending snippet when it improves clarity.
 
+## AiSalesCoach Web — projektspecifikke komponenter
+
+Du reviewer `src/clients/AiSalesCoach.Web/`. Kend disse produktspecifikke mønstre:
+
+### Real-time session — race conditions
+`LiveSession`-komponenten modtager hints via SignalR (WebSocket). Flag `useEffect` der ikke rydder op efter SignalR-subscriptions:
+```typescript
+// RIGTIGT — cleanup er kritisk
+useEffect(() => {
+  const connection = new HubConnectionBuilder()...build()
+  connection.start()
+  connection.on('HintReceived', onHint)
+  return () => { connection.stop() } // ← skal altid være her
+}, [])
+```
+
+### FrameworkCoverageBar — afledt state
+Coverage-dimensionerne (`discovery`, `pain_points`, `urgency`, `stakeholders`, `objections`, `closing`) er afledt state fra session-data. Flag `useEffect` der beregner dem — de skal beregnes under render:
+```typescript
+// RIGTIGT — afledt under render
+const coverage = useMemo(() => computeCoverage(session?.transcriptLines), [session?.transcriptLines])
+
+// FORKERT — effect der opdaterer state
+useEffect(() => { setCoverage(computeCoverage(...)) }, [...]) // ← flag
+```
+
+### HintCard — auto-dismiss
+Hints forsvinder automatisk efter 12 sekunder (`HINT_DISPLAY_AUTO_DISMISS_SECONDS = 12`). Flag timers der ikke rydder op:
+```typescript
+// RIGTIGT
+useEffect(() => {
+  const timer = setTimeout(onDismiss, 12_000)
+  return () => clearTimeout(timer) // ← manglende cleanup er en HIGH bug
+}, [hint.id])
+```
+
+### Consent UI — blokerende gate
+Consent-komponenten til optagelsessamtykke SKAL blokere session-start. Flag ethvert flow der lader brugeren starte optagelse uden at consent er givet og persisteret.
+
 ## Related
 
 - Agents: `typescript-reviewer` (generic TS/JS, invoked alongside on `.tsx`/`.jsx`), `security-reviewer` (project-wide audit)

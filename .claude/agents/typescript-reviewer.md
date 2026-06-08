@@ -119,6 +119,53 @@ vitest run                          # Tests (Vitest)
 jest --ci                           # Tests (Jest)
 ```
 
+## AiSalesCoach Web — projektspecifikke mønstre
+
+Du reviewer `src/clients/AiSalesCoach.Web/`. Kend disse mønstre:
+
+### API-kald — React Query, ikke fetch direkte
+```typescript
+// RIGTIGT — React Query via useApiClient hook
+const { data: session } = useQuery({
+  queryKey: ['session', sessionId],
+  queryFn: () => apiClient.get<SessionResponse>(`/api/sessions/${sessionId}`),
+})
+
+// FORKERT — direkte fetch i komponent
+const session = await fetch(`/api/sessions/${sessionId}`) // ← flag dette
+```
+
+### Typer fra Contracts (aldrig duplikér)
+DTOs fra backend er spejlet i `src/types/api.ts`. Flag ethvert sted der definerer en lokal type der matcher en Contracts-record:
+```typescript
+// FORKERT — lokal duplikering
+interface HintResponse { type: string; text: string } // ← allerede i src/types/api.ts
+
+// RIGTIGT
+import type { HintResponse } from '@/types/api'
+```
+
+### Vite env vars — ALDRIG private nøgler
+```typescript
+// FORKERT — eksponerer nøgle til browser-bundle
+const key = import.meta.env.VITE_DEEPGRAM_API_KEY // ← CRITICAL
+
+// RIGTIGT — Deepgram tokens hentes fra API
+const { token } = await apiClient.get('/api/sessions/{id}/token')
+```
+
+### Zustand store-mønstre
+```typescript
+// RIGTIGT — Zustand store med actions
+const useSessionStore = create<SessionStore>((set) => ({
+  session: null,
+  setSession: (s) => set({ session: s }),
+}))
+```
+
+### shadcn/ui — brug eksisterende komponenter
+Flag ethvert sted der implementerer en UI-primitiv (Button, Dialog, Card, Badge) manuelt i stedet for at bruge shadcn/ui.
+
 ## Approval Criteria
 
 - **Approve**: No CRITICAL or HIGH issues

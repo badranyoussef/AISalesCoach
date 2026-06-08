@@ -27,11 +27,14 @@ docs/architecture.md                   — fuld arkitekturguide
 | ORM | EF Core 10 + Npgsql (PostgreSQL) |
 | CQRS | MediatR 14 |
 | Validering | FluentValidation 12 |
+| Real-time | SignalR (hint delivery API → Desktop/Extension) |
 | Web | React 19, TypeScript, Vite, shadcn/ui, Tailwind |
 | Lyd | NAudio (Windows WASAPI), ScreenCaptureKit (macOS — stub) |
 | Transskription | Deepgram Nova-2 via WebSocket |
 
-## Afhængighedsregler
+## Arkitekturprincipper
+
+### Clean Architecture (Uncle Bob)
 
 ```
 Domain ← Application ← Infrastructure ← Api
@@ -39,6 +42,17 @@ Domain ← Contracts ←────────────────── D
 ```
 
 **Domain er aldrig afhængig af Infrastructure, Api, Desktop eller Web.**
+
+Se `.claude/rules/clean-architecture.md` for præcise lag-grænser og grep-kommandoer.
+
+### Domain-Driven Design (DDD)
+
+- **Ubiquitous Language**: Brug domænetermer konsekvent — `Session`, `Hint`, `FrameworkRule`, `TranscriptChunk`. Ikke `Record`, `Item`, `Entry`.
+- **Aggregates**: `Session` er aggregate root for `TranscriptLines`, `Hints`, `HintFeedback`. Opdatér kun via aggregate root.
+- **Value Objects**: Immutable typer uden identitet — `SessionStatus`, `HintType`, `CoverageScore`. Implementér som records.
+- **Domain Events**: Signifikante forretningshændelser — `HintGeneratedEvent`, `SessionEndedEvent`. Publicér via MediatR notifications.
+- **Repository Pattern**: Interfaces i Domain (`ISessionRepository`). Implementering i Infrastructure. Application afhænger kun af interfacet.
+- **Bounded Contexts**: Real-time coaching (Sessions, Hints) er adskilt fra post-call analyse (MeetingFiles, Analysis).
 
 ## Byg og test
 
@@ -58,10 +72,23 @@ dotnet run --project src/clients/AiSalesCoach.Desktop
 # Kør Web lokalt
 cd src/clients/AiSalesCoach.Web && npm run dev
 
-# EF Core migrations (kør fra Infrastructure-projektet)
+# EF Core migrations (kør fra repo-rod)
 dotnet ef migrations add <Navn> --project src/infrastructure/AiSalesCoach.Infrastructure --startup-project src/api/AiSalesCoach.Api
 dotnet ef database update --project src/infrastructure/AiSalesCoach.Infrastructure --startup-project src/api/AiSalesCoach.Api
 ```
+
+## Quality Gates — hvad der blokerer en feature
+
+En feature er **ikke done** uden at alle gates er grønne:
+
+| Gate | Krav | Agent |
+|------|------|-------|
+| Build | `dotnet build AiSalesCoach.sln` — ingen fejl, ingen warnings | `dotnet-build-resolver` |
+| Tests | `dotnet test` — alle grønne, ≥80% dækning på Application-laget | `tdd-guide` |
+| Arkitektur | Ingen layer violations | `clean-arch-guardian` |
+| Sikkerhed | Ingen CRITICAL/HIGH findings | `security-reviewer` |
+| Code Review | Ingen CRITICAL/HIGH findings | `csharp-reviewer` / `avalonia-reviewer` / `react-reviewer` |
+| Dokumentation | `docs/api-contracts.md` opdateret med nye endpoints | `tech-lead` |
 
 ## Kodestandarder
 
@@ -73,13 +100,26 @@ dotnet ef database update --project src/infrastructure/AiSalesCoach.Infrastructu
 - **Secrets**: aldrig i kode — brug `appsettings.Development.json` (gitignored) eller environment variables
 - **TypeScript (Web)**: strict mode, ingen `any`, React Query til alle API-kald
 
-## Sikkerhed (VIGTIGT)
+Se `.claude/rules/code-standards.md` for testdækning, async-regler og navngivningstabel.
+
+## Sikkerhed
 
 - JWT access tokens: max 15 min levetid
 - Refresh tokens: max 7 dage, roteres ved brug
 - Deepgram API-nøgle: **aldrig i Desktop eller Web** — kun kortlivede tokens fra Api
 - CORS: whitelist kun kendte origins i produktion
 - Alle endpoints kræver auth undtagen `/auth/login` og `/auth/refresh`
+
+Se `.claude/rules/security-by-design.md` for OWASP checklist og AiSalesCoach threat model.
+
+## AI Ethics & Ansvarlig brug
+
+- **Samtykke**: Optagelse starter ALDRIG uden eksplicit brugersamtykke. Consent UI er ikke optionel.
+- **Transparens**: Mødedeltagere skal informeres om at AI analyserer opkaldet.
+- **Hallucination**: Forkerte coaching hints skader salgsudfald direkte. Brug confidence thresholds (>0.75). Se `ai-safety-specialist`.
+- **Prompt injection**: Audio-input fra prospects er en angrebsvektor. Transcript-tekst må aldrig flettes ind i system-prompt-blokken.
+- **Data minimering**: Gem kun hvad der er nødvendigt. Voice data er biometrisk data (GDPR Art. 9) — slettes efter 90 dage som default.
+- **Bias**: Framework-scoring skal evalueres for demografisk bias inden produktionslancering.
 
 ## Reference-projekter (POC — læs kun)
 
