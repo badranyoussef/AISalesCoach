@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AiSalesCoach — Desktop Overlay Wireframes</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI Variable", sans-serif;
+    background: #0f0f1a;
+    min-height: 100vh;
+    color: #F9FAFB;
+  }
+
+  /* ─── Tab navigation ────────────────────────────────────────── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,15,26,0.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 52px;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 24px;
+  }
+
+  .nav-diamond {
+    width: 12px;
+    height: 12px;
+    background: #6366F1;
+    transform: rotate(45deg);
+    border-radius: 2px;
+  }
+
+  .nav-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #9CA3AF;
+    white-space: nowrap;
+  }
+
+  .tab-btn {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #6B7280;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
+  .tab-btn:hover { background: rgba(255,255,255,0.06); color: #D1D5DB; }
+
+  .tab-btn.active {
+    background: rgba(99,102,241,0.15);
+    color: #818CF8;
+    font-weight: 600;
+  }
+
+  /* ─── Page content ──────────────────────────────────────────── */
+  .tab-content { display: none; padding: 48px 40px; }
+  .tab-content.active { display: block; }
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #F9FAFB;
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .page-sub {
+    font-size: 13px;
+    color: #6B7280;
+    margin-bottom: 48px;
+  }
+
+  .section { margin-bottom: 48px; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #4B5563;
+    margin-bottom: 16px;
+  }
+
+  .state-desc {
+    font-size: 12px;
+    color: #6B7280;
+    margin-top: 10px;
+    max-width: 560px;
+    line-height: 1.5;
+  }
+
+  /* ─── Desktop background simulation ─────────────────────────── */
+  .desktop-sim {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .desktop-sim::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* ─── Overlay base ───────────────────────────────────────────── */
+  .overlay {
+    border-radius: 18px;
+    background: rgba(18, 18, 32, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  .overlay-520 { width: 520px; }
+  .overlay-400 { width: 400px; }
+  .overlay-320 { width: 320px; }
+
+  /* ─── Bar ────────────────────────────────────────────────────── */
+  .bar {
+    height: 36px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 14px;
+    flex-shrink: 0;
+  }
+
+  .brand-diamond {
+    width: 14px;
+    height: 14px;
+    background: #6366F1;
+    transform: rotate(45deg);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .brand-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #F9FAFB;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .divider-v {
+    width: 1px;
+    height: 16px;
+    background: rgba(255,255,255,0.1);
+    margin: 0 12px;
+    flex-shrink: 0;
+  }
+
+  .status-group {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 1;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-gray    { background: #6B7280; }
+  .dot-green   { background: #10B981; animation: breathe 1.6s ease-in-out infinite; }
+  .dot-red     { background: #EF4444; }
+  .dot-amber   { background: #F59E0B; }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1);    opacity: 0.7; }
+    50%       { transform: scale(1.3); opacity: 1;   }
+  }
+
+  .status-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: #D1D5DB;
+    white-space: nowrap;
+  }
+
+  .rec-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #EF4444;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .audio-meter {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 4px;
+  }
+
+  .audio-bar {
+    width: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.15);
+  }
+
+  .audio-bar.active { background: #10B981; }
+
+  .bar-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .bar-btn {
+    width: 26px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    border: none;
+    background: transparent;
+    transition: background 0.12s, color 0.12s;
+    font-family: inherit;
+  }
+
+  .bar-btn:hover { background: rgba(255,255,255,0.1); color: #F9FAFB; }
+  .bar-btn.primary { color: #6366F1; }
+  .bar-btn.primary:hover { background: rgba(99,102,241,0.15); }
+
+  .drag-handle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.25);
+    cursor: grab;
+    padding: 0 4px;
+  }
+
+  /* ─── Hint panel ─────────────────────────────────────────────── */
+  .hint-panel {
+    position: relative;
+    padding: 10px 14px 10px 17px;
+    background: rgba(24, 24, 42, 0.95);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 48px;
+  }
+
+  .hint-panel.dimmed { opacity: 0.45; }
+
+  .hint-accent {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+  }
+
+  .hint-content { flex: 1; min-width: 0; }
+
+  .hint-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: #F9FAFB;
+    line-height: 1.35;
+    margin-bottom: 6px;
+  }
+
+  .hint-text.small {
+    font-size: 14px;
+  }
+
+  .hint-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hint-badge {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .hint-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .hint-nav-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9CA3AF;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hint-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 8px;
+  }
+
+  .progress-line-wrap {
+    position: absolute;
+    bottom: 0; left: 3px; right: 0;
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+
+  .progress-line {
+    height: 100%;
+    background: #6366F1;
+    animation: dismiss-timer 12s linear forwards;
+    transform-origin: left;
+  }
+
+  .progress-line.amber { background: #F59E0B; }
+
+  @keyframes dismiss-timer {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+
+  /* ─── Transcript drawer ──────────────────────────────────────── */
+  .transcript-drawer {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(14, 14, 26, 0.96);
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px 0 4px;
+  }
+
+  .transcript-header {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #4B5563;
+    padding: 0 14px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .transcript-line {
+    padding: 4px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+
+  .t-time { font-size: 11px; color: #4B5563; font-variant-numeric: tabular-nums; flex-shrink: 0; width: 38px; }
+  .t-speaker { font-size: 11px; font-weight: 600; flex-shrink: 0; width: 64px; }
+  .t-text { font-size: 13px; color: #D1D5DB; line-height: 1.4; }
+
+  /* ─── Micro pill ─────────────────────────────────────────────── */
+  .micro-pill {
+    width: 140px;
+    height: 28px;
+    border-radius: 14px;
+    background: rgba(18, 18, 32, 0.92);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 7px;
+    cursor: pointer;
+  }
+
+  .micro-count { font-size: 12px; font-weight: 500; color: #D1D5DB; margin-left: 2px; }
+
+  .micro-badge {
+    background: #6366F1;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+  }
+
+  /* ─── Coverage bar (Design 2) ────────────────────────────────── */
+  .coverage-panel {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(14,14,26,0.9);
+    padding: 8px 14px 10px;
+  }
+
+  .coverage-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #4B5563;
+    margin-bottom: 7px;
+  }
+
+  .coverage-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px 10px;
+  }
+
+  .coverage-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .coverage-item-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: #6B7280;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .coverage-dots {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .cov-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .cov-dot.filled  { background: #10B981; }
+  .cov-dot.partial { background: #F59E0B; }
+  .cov-dot.empty   { background: rgba(255,255,255,0.1); }
+
+  /* ─── History panel (Design 3) ───────────────────────────────── */
+  .history-panel {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(14,14,26,0.9);
+    padding: 8px 0 4px;
+  }
+
+  .history-header {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #4B5563;
+    padding: 0 14px 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .history-item {
+    padding: 4px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .history-type {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .history-text {
+    font-size: 12px;
+    color: #9CA3AF;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .history-time {
+    font-size: 11px;
+    color: #4B5563;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  /* ─── Empty state ────────────────────────────────────────────── */
+  .empty-state {
+    padding: 24px 14px;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .empty-state-text {
+    font-size: 13px;
+    color: #4B5563;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    padding: 7px 18px;
+    background: rgba(99,102,241,0.2);
+    border: 1px solid rgba(99,102,241,0.4);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #818CF8;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .cta-btn:hover { background: rgba(99,102,241,0.3); }
+
+  /* ─── Hint types row ─────────────────────────────────────────── */
+  .hint-types-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ─── Mock separator ─────────────────────────────────────────── */
+  .mock-sep {
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 32px 0;
+  }
+
+  /* ─── Two-column layout ──────────────────────────────────────── */
+  .two-col {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .two-col-item { flex: 1; min-width: 300px; }
+
+  /* ─── Colors ─────────────────────────────────────────────────── */
+  .c-indigo { color: #6366F1; }
+  .accent-indigo { background: #6366F1; }
+  .accent-amber  { background: #F59E0B; }
+  .accent-emerald{ background: #10B981; }
+  .accent-violet { background: #8B5CF6; }
+  .accent-red    { background: #EF4444; }
+
+  .badge-indigo { background: rgba(99,102,241,0.18); color: #818CF8; }
+  .badge-amber  { background: rgba(245,158,11,0.18);  color: #FCD34D; }
+  .badge-emerald{ background: rgba(16,185,129,0.18);  color: #6EE7B7; }
+  .badge-violet { background: rgba(139,92,246,0.18);  color: #C4B5FD; }
+  .badge-red    { background: rgba(239,68,68,0.18);   color: #FCA5A5; }
+
+  .scrollbar-style::-webkit-scrollbar { width: 4px; }
+  .scrollbar-style::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-style::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  /* ─── Design note box ────────────────────────────────────────── */
+  .design-note {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #FCD34D;
+    margin-bottom: 32px;
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  .design-note strong { color: #F59E0B; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- NAVIGATION                                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-diamond"></div>
+    <span class="nav-title">Overlay Wireframes</span>
+  </div>
+  <button class="tab-btn active" onclick="showTab('tab-existing', this)">Eksisterende</button>
+  <button class="tab-btn" onclick="showTab('tab-d1', this)">Design 1 — Minimalistisk</button>
+  <button class="tab-btn" onclick="showTab('tab-d2', this)">Design 2 — Cockpit</button>
+  <button class="tab-btn" onclick="showTab('tab-d3', this)">Design 3 — Progressivt</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TAB: EKSISTERENDE                                                -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="tab-existing" class="tab-content active">
+  <h1 class="page-title">Eksisterende design</h1>
+  <p class="page-sub">ParakeetAI-inspireret · 520px bred · Alle states</p>
+
+  <!-- STATE 1: IDLE -->
+  <div class="section">
+    <div class="section-label">State 1 — Idle · 36px</div>
+    <div class="desktop-sim">
+      <div class="overlay overlay-520">
+        <div class="bar">
+          <div class="brand">
+            <div class="brand-diamond"></div>
+            <span class="brand-name">AiSalesCoach</span>
+          </div>
+          <div class="divider-v"></div>
+          <div class="status-group">
+            <div class="status-dot dot-gray"></div>
+            <span class="status-text">Klar</span>
+          </div>
+          <div class="bar-controls">
+            <span class="drag-handle">⠿</span>
+            <button class="bar-btn">▊</button>
+            <button class="bar-btn">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">App åben, ingen session aktiv. Næsten usynlig — bare branding og klar-status.</p>
+  </div>
+
+  <!-- STATE 2: AKTIV, INTET HINT -->
+  <div class="section">
+    <div class="section-label">State 2 — Session aktiv, intet hint endnu · 36px</div>
+    <div class="desktop-sim">
+      <div class="overlay overlay-520">
+        <div class="bar">
+          <div class="brand"><div class="brand-diamond"></div></div>
+          <div class="status-group" style="gap:8px">
+            <div class="status-dot dot-red"></div>
+            <span class="rec-label">REC 02:14</span>
+            <div class="divider-v" style="margin:0 6px"></div>
+            <div class="status-dot dot-green"></div>
+            <span class="status-text">Lytter…</span>
+            <div class="audio-meter" style="margin-left:6px">
+              <div class="audio-bar active" style="height:14px"></div>
+              <div class="audio-bar active" style="height:10px"></div>
+              <div class="audio-bar active" style="height:18px"></div>
+              <div class="audio-bar active" style="height:8px"></div>
+              <div class="audio-bar" style="height:12px"></div>
+            </div>
+          </div>
+          <div class="bar-controls">
+            <button class="bar-btn">⏸</button>
+            <span class="drag-handle">⠿</span>
+            <button class="bar-btn">▊</button>
+            <button class="bar-btn">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Optagelse kører. Rød REC-dot er ikke-valgfri (GDPR). Grøn dot pulserer. Audio-meter bekræfter lyd fanges.</p>
+  </div>
+
+  <!-- STATE 3: HINTS -->
+  <div class="section">
+    <div class="section-label">State 3 — Hint vist · 84px · Alle hint-typer</div>
+    <div class="desktop-sim">
+      <div class="hint-types-row" style="width:520px">
+
+        <div class="overlay overlay-520">
+          <div class="bar">
+            <div class="brand"><div class="brand-diamond"></div></div>
+            <div class="status-group" style="gap:8px">
+              <div class="status-dot dot-red"></div>
+              <span class="rec-label">REC 02:34</span>
+              <div class="divider-v" style="margin:0 6px"></div>
+              <div class="status-dot dot-green"></div>
+              <span class="status-text">Coaching</span>
+              <div class="audio-meter" style="margin-left:6px">
+                <div class="audio-bar active" style="height:16px"></div>
+                <div class="audio-bar active" style="height:10px"></div>
+                <div class="audio-bar active" style="height:18px"></div>
+                <div class="audio-bar active" style="height:12px"></div>
+                <div class="audio-bar" style="height:8px"></div>
+              </div>
+            </div>
+            <div class="bar-controls">
+              <button class="bar-btn" title="Transcript">≡</button>
+              <button class="bar-btn">⏸</button>
+              <span class="drag-handle">⠿</span>
+              <button class="bar-btn">▊</button>
+              <button class="bar-btn">✕</button>
+            </div>
+          </div>
+          <div class="hint-panel">
+            <div class="hint-accent accent-indigo"></div>
+            <div class="hint-content">
+              <div class="hint-text">Spørg om budget og beslutningstidslinje</div>
+              <div class="hint-meta">
+                <span class="hint-badge badge-indigo">Spørgsmål · 87%</span>
+                <div class="hint-nav">
+                  <span style="color:#6B7280;font-size:13px;cursor:pointer">◀</span>
+                  <span class="hint-nav-count">2 / 3</span>
+                  <span style="color:#6B7280;font-size:13px;cursor:pointer">▶</span>
+                </div>
+                <div class="hint-actions">
+                  <button class="bar-btn" style="font-size:12px">⧉</button>
+                  <button class="bar-btn">✕</button>
+                </div>
+              </div>
+            </div>
+            <div class="progress-line-wrap"><div class="progress-line"></div></div>
+          </div>
+        </div>
+
+        <div class="overlay overlay-520">
+          <div class="bar">
+            <div class="brand"><div class="brand-diamond"></div></div>
+            <div class="status-group" style="gap:8px">
+              <div class="status-dot dot-red"></div><span class="rec-label">REC 03:41</span>
+              <div class="divider-v" style="margin:0 6px"></div>
+              <div class="status-dot dot-green"></div><span class="status-text">Coaching</span>
+            </div>
+            <div class="bar-controls">
+              <button class="bar-btn">≡</button><button class="bar-btn">⏸</button>
+              <span class="drag-handle">⠿</span><button class="bar-btn">▊</button><button class="bar-btn">✕</button>
+            </div>
+          </div>
+          <div class="hint-panel">
+            <div class="hint-accent accent-amber"></div>
+            <div class="hint-content">
+              <div class="hint-text">Anerkend indvending — spørg hvad der er vigtigst for dem</div>
+              <div class="hint-meta">
+                <span class="hint-badge badge-amber">Indvending · 91%</span>
+                <div class="hint-actions" style="margin-left:auto">
+                  <button class="bar-btn" style="font-size:12px">⧉</button>
+                  <button class="bar-btn">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overlay overlay-520">
+          <div class="bar">
+            <div class="brand"><div class="brand-diamond"></div></div>
+            <div class="status-group" style="gap:8px">
+              <div class="status-dot dot-red"></div><span class="rec-label">REC 05:12</span>
+              <div class="divider-v" style="margin:0 6px"></div>
+              <div class="status-dot dot-green"></div><span class="status-text">Coaching</span>
+            </div>
+            <div class="bar-controls">
+              <button class="bar-btn">≡</button><button class="bar-btn">⏸</button>
+              <span class="drag-handle">⠿</span><button class="bar-btn">▊</button><button class="bar-btn">✕</button>
+            </div>
+          </div>
+          <div class="hint-panel">
+            <div class="hint-accent accent-emerald"></div>
+            <div class="hint-content">
+              <div class="hint-text">Test lukning — "Giver det mening at tage næste skridt?"</div>
+              <div class="hint-meta">
+                <span class="hint-badge badge-emerald">Lukning · 78%</span>
+                <div class="hint-actions" style="margin-left:auto">
+                  <button class="bar-btn" style="font-size:12px">⧉</button>
+                  <button class="bar-btn">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <p class="state-desc">Hint-rude folder ud under baren. Venstrekant + badge-farve signalerer hint-type. 12s auto-dismiss-timer (indigo linje).</p>
+  </div>
+
+  <!-- STATE 3B: TRANSCRIPT -->
+  <div class="section">
+    <div class="section-label">State 3b — Hint + Transcript drawer åben (on-demand)</div>
+    <div class="desktop-sim">
+      <div class="overlay overlay-520">
+        <div class="bar">
+          <div class="brand"><div class="brand-diamond"></div></div>
+          <div class="status-group" style="gap:8px">
+            <div class="status-dot dot-red"></div><span class="rec-label">REC 03:01</span>
+            <div class="divider-v" style="margin:0 6px"></div>
+            <div class="status-dot dot-green"></div><span class="status-text">Coaching</span>
+            <div class="audio-meter" style="margin-left:6px">
+              <div class="audio-bar active" style="height:12px"></div>
+              <div class="audio-bar active" style="height:16px"></div>
+              <div class="audio-bar" style="height:10px"></div>
+              <div class="audio-bar active" style="height:14px"></div>
+              <div class="audio-bar active" style="height:8px"></div>
+            </div>
+          </div>
+          <div class="bar-controls">
+            <button class="bar-btn c-indigo">≡</button>
+            <button class="bar-btn">⏸</button>
+            <span class="drag-handle">⠿</span>
+            <button class="bar-btn">▊</button>
+            <button class="bar-btn">✕</button>
+          </div>
+        </div>
+        <div class="hint-panel">
+          <div class="hint-accent accent-amber"></div>
+          <div class="hint-content">
+            <div class="hint-text">Følg op — hvad er den reelle konsekvens for dem?</div>
+            <div class="hint-meta">
+              <span class="hint-badge badge-amber">Indvending · 88%</span>
+              <div class="hint-actions" style="margin-left:auto">
+                <button class="bar-btn" style="font-size:12px">⧉</button>
+                <button class="bar-btn">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="transcript-drawer scrollbar-style">
+          <div class="transcript-header"><span>Transcript</span><span style="color:#4B5563;font-size:11px">auto-scroll ⇩</span></div>
+          <div class="transcript-line"><span class="t-time">03:00</span><span class="t-speaker" style="color:#818CF8">Dig</span><span class="t-text">Det forstår jeg godt, og det er faktisk…</span></div>
+          <div class="transcript-line"><span class="t-time">02:54</span><span class="t-speaker" style="color:#9CA3AF">Prospekt</span><span class="t-text">Vi er egentlig tilfredse med det vi har nu…</span></div>
+          <div class="transcript-line"><span class="t-time">02:41</span><span class="t-speaker" style="color:#818CF8">Dig</span><span class="t-text">Hvad fik jer oprindeligt til at kigge på alternativer?</span></div>
+          <div class="transcript-line"><span class="t-time">02:30</span><span class="t-speaker" style="color:#9CA3AF">Prospekt</span><span class="t-text">Jamen, prisen var jo et issue, og så var der lidt…</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Transcript er on-demand — kun synlig når ≡ klikkes.</p>
+  </div>
+
+  <!-- STATE 4: PAUSET -->
+  <div class="section">
+    <div class="section-label">State 4 — Session pauset · 36px</div>
+    <div class="desktop-sim">
+      <div class="overlay overlay-520">
+        <div class="bar">
+          <div class="brand"><div class="brand-diamond"></div></div>
+          <div class="status-group" style="gap:8px">
+            <div class="status-dot dot-amber"></div>
+            <span style="font-size:12px;font-weight:600;color:#F59E0B">Pauset 02:34</span>
+            <div class="divider-v" style="margin:0 8px"></div>
+            <span class="status-text" style="color:#6B7280">Coaching stoppet</span>
+          </div>
+          <div class="bar-controls">
+            <button class="bar-btn c-indigo">▶</button>
+            <span class="drag-handle">⠿</span>
+            <button class="bar-btn">▊</button>
+            <button class="bar-btn">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">REC-dot FJERNET — GDPR-krav: deltageren kan se der ikke optages. Amber signalerer pauset tilstand.</p>
+  </div>
+
+  <!-- STATE 5: MICRO-PILLE -->
+  <div class="section">
+    <div class="section-label">State 5 — Micro-pille (minimeret) · 140×28px</div>
+    <div class="desktop-sim">
+      <div class="micro-pill">
+        <div class="brand-diamond" style="width:10px;height:10px"></div>
+        <div class="status-dot dot-green" style="width:6px;height:6px"></div>
+        <span class="micro-count">3 hints</span>
+        <span class="micro-badge">3</span>
+      </div>
+    </div>
+    <p class="state-desc">Minimalt fodaftryk. Nyt hint → pille pulserer + tæller stiger. Klik = genekspandér.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TAB: DESIGN 1 — MINIMALISTISK                                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="tab-d1" class="tab-content">
+  <h1 class="page-title">Design 1 — Minimalistisk</h1>
+  <p class="page-sub">Ét hint ad gangen · 320px bred · Lavest kognitiv last · Til sælgere der ikke vil forstyrres</p>
+
+  <!-- AKTIV MED HINT -->
+  <div class="section">
+    <div class="section-label">State A — Aktiv session, ét hint</div>
+    <div class="desktop-sim">
+      <div class="overlay overlay-320">
+        <div class="bar">
+          <div class="brand"><div class="brand-diamond"></div></div>
+          <div class="status-group" style="gap:8px">
+            <div class="status-dot dot-red"></div>
+            <span class="rec-label">REC 02:34</span>
+            <div class="divider-v" style="margin:0 6px"></div>
+            <div class="status-dot dot-green"></div>
+            <div class="audio-meter">
+              <div class="audio-bar active" style="height:14px"></div>
+              <div class="audio-bar active" style="height:10px"></div>
+              <div class="audio-bar active" style="height:16px"></div>
+              <div class="audio-bar" style="height:8px"></div>
+            </div>
+          </div>
+          <div class="bar-controls">
+            <button class="bar-btn">⏸</button>
+            <button class="bar-btn">✕</button>
+          </div>
+        </div>
+        <div class="hint-panel">
+          <div class="hint-accent accent-indigo"></div>
+          <div class="hint-content">
+            <div class="hint-text">Spørg om budget og beslutningstidslinje</div>
+            <div class="hint-meta">
+              <span class="hint-badge badge-indigo">Spørgsmål</span>
+              <div class="hint-nav" style="margin-left:auto">
+                <span style="color:#6B7280;font-size:13px">◀</span>
+                <span class="hint-nav-count">1 / 2</span>
+                <span style="color:#6B7280;font-size:13px">▶</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Ét hint ad gangen. Ingen coverage-data, ingen timer synlig. Kø-antal vises diskret (1/2). Confidence-% og dismiss vises kun ved hover.</p>
+  </div>
+
+  <!-- HOVER STATE -->
+  <div class="section">
+    <div class="section-label">State A (hover) — Kontroller afsløres</div>
+    <div class="desktop-sim">
+      <div class="overlay overlay-320">
+        <div class="bar">
+          <div class="brand"><div class="brand-diamond"></div></div>
+          <div class="status-group" style="gap:8px">
+            <div class="status-dot dot-red"></div>
+            <span class="rec-label">REC 02:34</span>
+            <div class="divider-v" style="margin:0 6px"></div>
+            <div class="status-dot dot-green"></div>
+          </div>
+          <div class="bar-controls">
+            <button class="bar-btn">⏸</button>
+            <button class="bar-btn">✕</button>
+          </div>
+        </div>
+        <div class="hint-panel">
+          <div class="hint-accent accent-indigo"></div>
+          <div class="hint-content">
+            <div class="hint-text">Spørg om budget og beslutningstidslinje</div>
+            <div class="hint-meta">
+              <span class="hint-badge badge-indigo">Spørgsmål · 87%</span>
+              <div class="hint-actions" style="margin-left:auto">
+                <button class="bar-btn" style="font-size:12px">⧉</button>
+                <button class="bar-btn">✕</button>
+              </div>
+            </div>
+          </div>
+          <div class="progress-line-wrap"><div class="progress-line"></div></div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Hover afslører: confidence-%, kopiér-knap, afvis-knap og 12s nedtællingslinje. Default-state er renere.</p>
+  </div>
+
+  <!-- IDLE -->
+  <div class="section">
+    <div class="section-label">State B — Idle / ingen session</div>
+    <div class="two-col">
+      <div class="two-col-item">
+        <div class="section-label" style="margin-bottom:10px">Ingen session</div>
+        <div class="desktop-sim">
+          <div class="overlay overlay-320">
+            <div class="bar">
+              <div class="brand">
+                <div class="brand-diamond"></div>
+                <span class="brand-name" style="font-size:12px">AiSalesCoach</span>
+              </div>
+              <div class="status-group">
+                <div class="status-dot dot-gray"></div>
+                <span class="status-text">Klar</span>
+              </div>
+              <div class="bar-controls">
+                <button class="bar-btn">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="two-col-item">
+        <div class="section-label" style="margin-bottom:10px">Session live, ingen hints endnu</div>
+        <div class="desktop-sim">
+          <div class="overlay overlay-320">
+            <div class="bar">
+              <div class="brand"><div class="brand-diamond"></div></div>
+              <div class="status-group" style="gap:8px">
+                <div class="status-dot dot-red"></div>
+                <span class="rec-label">REC 00:42</span>
+                <div class="divider-v" style="margin:0 6px"></div>
+                <div class="status-dot dot-green"></div>
+                <span class="status-text" style="font-size:11px">Lytter…</span>
+                <div class="audio-meter">
+                  <div class="audio-bar active" style="height:12px"></div>
+                  <div class="audio-bar" style="height:16px"></div>
+                  <div class="audio-bar active" style="height:10px"></div>
+                </div>
+              </div>
+              <div class="bar-controls">
+                <button class="bar-btn">⏸</button>
+                <button class="bar-btn">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Idle: kun 36px bar. Session live uden hint: bar forbliver 36px — ingen tom rude under. Sælgerens skærm forstyrres minimalt.</p>
+  </div>
+
+  <!-- HINT TYPER -->
+  <div class="section">
+    <div class="section-label">Alle hint-typer i Design 1</div>
+    <div class="desktop-sim">
+      <div class="hint-types-row" style="width:320px">
+
+        <div class="overlay overlay-320">
+          <div class="bar"><div class="brand"><div class="brand-diamond"></div></div>
+            <div class="status-group" style="gap:8px"><div class="status-dot dot-red"></div><span class="rec-label">REC 01:12</span></div>
+            <div class="bar-controls"><button class="bar-btn">⏸</button><button class="bar-btn">✕</button></div>
+          </div>
+          <div class="hint-panel"><div class="hint-accent accent-amber"></div>
+            <div class="hint-content">
+              <div class="hint-text small">Anerkend indvending inden du svarer</div>
+              <div class="hint-meta"><span class="hint-badge badge-amber">Indvending</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overlay overlay-320">
+          <div class="bar"><div class="brand"><div class="brand-diamond"></div></div>
+            <div class="status-group" style="gap:8px"><div class="status-dot dot-red"></div><span class="rec-label">REC 04:55</span></div>
+            <div class="bar-controls"><button class="bar-btn">⏸</button><button class="bar-btn">✕</button></div>
+          </div>
+          <div class="hint-panel"><div class="hint-accent accent-emerald"></div>
+            <div class="hint-content">
+              <div class="hint-text small">Test lukning — "Giver det mening at gå videre?"</div>
+              <div class="hint-meta"><span class="hint-badge badge-emerald">Lukning</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overlay overlay-320">
+          <div class="bar"><div class="brand"><div class="brand-diamond"></div></div>
+            <div class="status-group" style="gap:8px"><div class="status-dot dot-red"></div><span class="rec-label">REC 06:20</span></div>
+            <div class="bar-controls"><button class="bar-btn">⏸</button><button class="bar-btn">✕</button></div>
+          </div>
+          <div class="hint-panel"><div class="hint-accent accent-red"></div>
+            <div class="hint-content">
+              <div class="hint-text small">Hastegrad ikke etableret — spørg om timeline</div>
+              <div class="hint-meta"><span class="hint-badge badge-red">Urgency</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <p class="state-desc">Venstrekant-accent og badge signalerer type. Tekst max 2 linjer — tvinger AI til at være konkret.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TAB: DESIGN 2 — COCKPIT                                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="tab-d2" class="tab-content">
+  <h1 class="page-title">Design 2 — Cockpit</h1>
+  <p class="page-sub">Mest indsigt · 400px bred · 3 hints + coverage · Til træning og medlyt</p>
+
+  <div class="design-note">
+    <strong>Bredde-beslutning krævet:</strong> Coverage-rækken (6 dimensioner) virker ikke i 320px — labels bliver for korte. Dette design bruger 400px. Beslut om overlay-bredden skal være 320px (spec) eller 400px (cockpit-niveau). Det påvirker Avalonia-vinduets faste bredde.
+  </div>
+
+  <!-- AKTIV MED 3 HINTS + COVERAGE -->
+  <div class="section">
+    <div class="section-label">State A — Aktiv session med 3 hints + coverage</div>
+    <div class="desktop-sim">
+      <div class="overlay overlay-400">
+        <div class="bar">
+          <div class="brand"><div class="brand-diamond"></div></div>
+          <div class="status-group" style="gap:8px">
+            <div class="status-dot dot-red"></div>
+            <span class="rec-label">REC 02:34</span>
+            <div class="divider-v" style="margin:0 6px"></div>
+            <div class="status-dot dot-green"></div>
+            <span class="status-text">Coaching</span>
+            <div class="audio-meter" style="margin-left:4px">
+              <div class="audio-bar active" style="height:14px"></div>
+              <div class="audio-bar active" style="height:10px"></div>
+              <div class="audio-bar active" style="height:16px"></div>
+              <div class="audio-bar" style="height:8px"></div>
+            </div>
+          </div>
+          <div class="bar-controls">
+            <button class="bar-btn">≡</button>
+            <button class="bar-btn">⏸</button>
+            <button class="bar-btn">✕</button>
+          </div>
+        </div>
+
+        <!-- Aktivt hint -->
+        <div class="hint-panel">
+          <div class="hint-accent accent-amber"></div>
+          <div class="hint-content">
+            <div class="hint-text">Anerkend indvending — spørg hvad der vejer tungest</div>
+            <div class="hint-meta">
+              <span class="hint-badge badge-amber">Indvending · 91%</span>
+              <div class="hint-nav">
+                <span style="color:#6B7280;font-size:13px">◀</span>
+                <span class="hint-nav-count">1 / 3</span>
+                <span style="color:#6B7280;font-size:13px">▶</span>
+              </div>
+              <div class="hint-actions">
+                <button class="bar-btn" style="font-size:12px">⧉</button>
+                <button class="bar-btn">✕</button>
+              </div>
+            </div>
+          </div>
+          <div class="progress-line-wrap"><div class="progress-line amber"></div></div>
+        </div>
+
+        <!-- Kø-hints (dæmpet) -->
+        <div class="hint-panel dimmed" style="padding-top:7px;padding-bottom:7px;min-height:36px">
+          <div class="hint-accent accent-indigo"></div>
+          <div class="hint-content">
+            <div class="hint-text" style="font-size:13px;margin-bottom:0">Spørg om hvem der ellers skal involveres</div>
+          </div>
+          <span class="hint-badge badge-indigo" style="font-size:10px;flex-shrink:0">Spørgsmål</span>
+        </div>
+
+        <div class="hint-panel dimmed" style="padding-top:7px;padding-bottom:7px;min-height:36px">
+          <div class="hint-accent accent-emerald"></div>
+          <div class="hint-content">
+            <div class="hint-text" style="font-size:13px;margin-bottom:0">Test lukning — "Næste skridt?"</div>
+          </div>
+          <span class="hint-badge badge-emerald" style="font-size:10px;flex-shrink:0">Lukning</span>
+        </div>
+
+        <!-- Coverage -->
+        <div class="coverage-panel">
+          <div class="coverage-label">Framework coverage</div>
+          <div class="coverage-grid">
+            <div class="coverage-item">
+              <span class="coverage-item-label">Afdækning</span>
+              <div class="coverage-dots">
+                <div class="cov-dot filled"></div>
+                <div class="cov-dot filled"></div>
+                <div class="cov-dot filled"></div>
+              </div>
+            </div>
+            <div class="coverage-item">
+              <span class="coverage-item-label">Smertepunkter</span>
+              <div class="coverage-dots">
+                <div class="cov-dot filled"></div>
+                <div class="cov-dot partial"></div>
+                <div class="cov-dot empty"></div>
+              </div>
+            </div>
+            <div class="coverage-item">
+              <span class="coverage-item-label">Hastegrad</span>
+              <div class="coverage-dots">
+                <div class="cov-dot empty"></div>
+                <div class="cov-dot empty"></div>
+                <div class="cov-dot empty"></div>
+              </div>
+            </div>
+            <div class="coverage-item">
+              <span class="coverage-item-label">Beslutningstagere</span>
+              <div class="coverage-dots">
+                <div class="cov-dot filled"></div>
+                <div class="cov-dot empty"></div>
+                <div class="cov-dot empty"></div>
+              </div>
+            </div>
+            <div class="coverage-item">
+              <span class="coverage-item-label">Indvendinger</span>
+              <div class="coverage-dots">
+                <div class="cov-dot filled"></div>
+                <div class="cov-dot filled"></div>
+                <div class="cov-dot empty"></div>
+              </div>
+            </div>
+            <div class="coverage-item">
+              <span class="coverage-item-label">Lukning</span>
+              <div class="coverage-dots">
+                <div class="cov-dot empty"></div>
+                <div class="cov-dot empty"></div>
+                <div class="cov-dot empty"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <p class="state-desc">Aktivt hint er fremhævet. Kø-hints er synlige men dæmpede. Coverage viser de 6 dimensioner — tomme er nudge-kandidater (Hastegrad, Lukning).</p>
+  </div>
+
+  <!-- IDLE MED TOM COVERAGE -->
+  <div class="section">
+    <div class="section-label">State B — Idle / pre-opkald med tom coverage</div>
+    <div class="desktop-sim">
+      <div class="overlay overlay-400">
+        <div class="bar">
+          <div class="brand">
+            <div class="brand-diamond"></div>
+            <span class="brand-name" style="font-size:12px">AiSalesCoach</span>
+          </div>
+          <div class="divider-v"></div>
+          <div class="status-group">
+            <div class="status-dot dot-gray"></div>
+            <span class="status-text">Klar · SPIN-framework</span>
+          </div>
+          <div class="bar-controls">
+            <button class="bar-btn">⚙</button>
+            <button class="bar-btn">✕</button>
+          </div>
+        </div>
+        <div class="coverage-panel">
+          <div class="coverage-label">Framework coverage — starter ved opkald</div>
+          <div class="coverage-grid">
+            <div class="coverage-item"><span class="coverage-item-label">Afdækning</span><div class="coverage-dots"><div class="cov-dot empty"></div><div class="cov-dot empty"></div><div class="cov-dot empty"></div></div></div>
+            <div class="coverage-item"><span class="coverage-item-label">Smertepunkter</span><div class="coverage-dots"><div class="cov-dot empty"></div><div class="cov-dot empty"></div><div class="cov-dot empty"></div></div></div>
+            <div class="coverage-item"><span class="coverage-item-label">Hastegrad</span><div class="coverage-dots"><div class="cov-dot empty"></div><div class="cov-dot empty"></div><div class="cov-dot empty"></div></div></div>
+            <div class="coverage-item"><span class="coverage-item-label">Beslutningstagere</span><div class="coverage-dots"><div class="cov-dot empty"></div><div class="cov-dot empty"></div><div class="cov-dot empty"></div></div></div>
+            <div class="coverage-item"><span class="coverage-item-label">Indvendinger</span><div class="coverage-dots"><div class="cov-dot empty"></div><div class="cov-dot empty"></div><div class="cov-dot empty"></div></div></div>
+            <div class="coverage-item"><span class="coverage-item-label">Lukning</span><div class="coverage-dots"><div class="cov-dot empty"></div><div class="cov-dot empty"></div><div class="cov-dot empty"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Vis valgt framework pre-opkald. Coverage er tom og tænder efterhånden som opkaldet skrider frem.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TAB: DESIGN 3 — PROGRESSIVT                                     -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="tab-d3" class="tab-content">
+  <h1 class="page-title">Design 3 — Progressivt</h1>
+  <p class="page-sub">3 niveauer · Sælgeren styrer selv · Anbefalet design · Indeholder Design 1 + 2 som trin</p>
+
+  <!-- NIVEAU 1: MICRO-PILLE -->
+  <div class="section">
+    <div class="section-label">Niveau 1 — Micro-pille (28px) · Mindst mulig forstyrrelse</div>
+    <div class="two-col">
+      <div class="two-col-item">
+        <div class="section-label" style="margin-bottom:10px">Live, hint venter</div>
+        <div class="desktop-sim">
+          <div class="micro-pill" style="animation: pulse-border 1.5s ease-in-out infinite;">
+            <div class="brand-diamond" style="width:10px;height:10px;animation:breathe 1.5s ease-in-out infinite"></div>
+            <div class="status-dot dot-green" style="width:6px;height:6px"></div>
+            <span class="micro-count">2 hints</span>
+            <span class="micro-badge">2</span>
+          </div>
+        </div>
+      </div>
+      <div class="two-col-item">
+        <div class="section-label" style="margin-bottom:10px">Idle</div>
+        <div class="desktop-sim">
+          <div class="micro-pill">
+            <div class="brand-diamond" style="width:10px;height:10px;background:#4B5563"></div>
+            <div class="status-dot dot-gray" style="width:6px;height:6px"></div>
+            <span class="micro-count" style="color:#6B7280">Klar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Mindst mulig forstyrrelse. Nyt hint → diamant + badge pulserer. Klik = ekspandér til niveau 2 (bar).</p>
+  </div>
+
+  <!-- NIVEAU 2: BAR -->
+  <div class="section">
+    <div class="section-label">Niveau 2 — Bar (36px) · Klik på pille</div>
+    <div class="two-col">
+      <div class="two-col-item">
+        <div class="section-label" style="margin-bottom:10px">Live session</div>
+        <div class="desktop-sim">
+          <div class="overlay overlay-320">
+            <div class="bar">
+              <div class="brand"><div class="brand-diamond"></div></div>
+              <div class="status-group" style="gap:8px">
+                <div class="status-dot dot-red"></div>
+                <span class="rec-label">REC 02:34</span>
+                <div class="divider-v" style="margin:0 4px"></div>
+                <div class="status-dot dot-green"></div>
+                <span class="status-text" style="font-size:11px">2 hints</span>
+              </div>
+              <div class="bar-controls">
+                <button class="bar-btn" title="Ekspandér" style="font-size:13px">⌄</button>
+                <button class="bar-btn">⏸</button>
+                <button class="bar-btn" title="Minimer til pille" style="font-size:9px">●</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="two-col-item">
+        <div class="section-label" style="margin-bottom:10px">Idle</div>
+        <div class="desktop-sim">
+          <div class="overlay overlay-320">
+            <div class="bar">
+              <div class="brand">
+                <div class="brand-diamond"></div>
+                <span class="brand-name" style="font-size:12px">AiSalesCoach</span>
+              </div>
+              <div class="status-group">
+                <div class="status-dot dot-gray"></div>
+                <span class="status-text">Klar</span>
+              </div>
+              <div class="bar-controls">
+                <button class="bar-btn" style="font-size:9px">●</button>
+                <button class="bar-btn">✕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Bar viser status + hint-antal. ⌄ = ekspandér til niveau 3 (fuld). ● = kollaps til micro-pille.</p>
+  </div>
+
+  <!-- NIVEAU 3: FULD -->
+  <div class="section">
+    <div class="section-label">Niveau 3 — Fuld (~150px) · Klik på ⌄ i baren</div>
+    <div class="two-col">
+      <div class="two-col-item">
+        <div class="section-label" style="margin-bottom:10px">Aktiv med hint + historik</div>
+        <div class="desktop-sim">
+          <div class="overlay overlay-320">
+            <div class="bar">
+              <div class="brand"><div class="brand-diamond"></div></div>
+              <div class="status-group" style="gap:8px">
+                <div class="status-dot dot-red"></div>
+                <span class="rec-label">REC 02:34</span>
+                <div class="divider-v" style="margin:0 4px"></div>
+                <div class="status-dot dot-green"></div>
+                <div class="audio-meter">
+                  <div class="audio-bar active" style="height:14px"></div>
+                  <div class="audio-bar active" style="height:10px"></div>
+                  <div class="audio-bar active" style="height:16px"></div>
+                  <div class="audio-bar" style="height:8px"></div>
+                </div>
+              </div>
+              <div class="bar-controls">
+                <button class="bar-btn" title="Kollaps til bar" style="font-size:13px">⌃</button>
+                <button class="bar-btn">⏸</button>
+                <button class="bar-btn" style="font-size:9px">●</button>
+              </div>
+            </div>
+
+            <!-- Aktivt hint -->
+            <div class="hint-panel">
+              <div class="hint-accent accent-amber"></div>
+              <div class="hint-content">
+                <div class="hint-text">Anerkend indvending inden du svarer</div>
+                <div class="hint-meta">
+                  <span class="hint-badge badge-amber">Indvending · 91%</span>
+                  <div class="hint-actions" style="margin-left:auto">
+                    <button class="bar-btn" style="font-size:12px">⧉</button>
+                    <button class="bar-btn">✕</button>
+                  </div>
+                </div>
+              </div>
+              <div class="progress-line-wrap"><div class="progress-line amber"></div></div>
+            </div>
+
+            <!-- Historik -->
+            <div class="history-panel">
+              <div class="history-header">
+                <span>Tidligere hints</span>
+                <span style="font-size:10px;color:#6B7280;cursor:pointer">skjul ⌃</span>
+              </div>
+              <div class="history-item">
+                <div class="history-type" style="background:#6366F1"></div>
+                <span class="history-text">Spørg om budget og tidslinje</span>
+                <span class="history-time">02:18</span>
+              </div>
+              <div class="history-item">
+                <div class="history-type" style="background:#10B981"></div>
+                <span class="history-text">Etabler næste konkrete skridt</span>
+                <span class="history-time">01:54</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col-item">
+        <div class="section-label" style="margin-bottom:10px">Idle / ingen session</div>
+        <div class="desktop-sim">
+          <div class="overlay overlay-320">
+            <div class="bar">
+              <div class="brand">
+                <div class="brand-diamond"></div>
+                <span class="brand-name" style="font-size:12px">AiSalesCoach</span>
+              </div>
+              <div class="status-group">
+                <div class="status-dot dot-gray"></div>
+                <span class="status-text">Klar</span>
+              </div>
+              <div class="bar-controls">
+                <button class="bar-btn">⚙</button>
+                <button class="bar-btn">✕</button>
+              </div>
+            </div>
+            <div class="empty-state">
+              <div class="empty-state-text">Ingen aktiv session.<br>Start opkald for at aktivere coaching.</div>
+              <button class="cta-btn">Start session</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Fuld visning: aktivt hint + historik over tidligere hints. ⌃ kollapser til bar. ● minimerer til micro-pille.</p>
+  </div>
+
+  <!-- STATE-MASKINE -->
+  <div class="section">
+    <div class="section-label">State-maskine — alle niveauer og states</div>
+    <div class="desktop-sim" style="align-items:flex-start;padding:28px 32px">
+      <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;position:relative;z-index:1">
+        <div>
+          <div style="font-size:10px;color:#4B5563;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;font-weight:600">Niveau 1</div>
+          <div class="micro-pill" style="margin-bottom:8px">
+            <div class="brand-diamond" style="width:10px;height:10px"></div>
+            <div class="status-dot dot-green" style="width:6px;height:6px"></div>
+            <span class="micro-count">2 hints</span>
+            <span class="micro-badge">2</span>
+          </div>
+          <div style="font-size:11px;color:#6B7280">Micro-pille · 140×28px</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:18px;color:#4B5563;margin-top:24px">→</div>
+        <div>
+          <div style="font-size:10px;color:#4B5563;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;font-weight:600">Niveau 2</div>
+          <div class="overlay overlay-320" style="margin-bottom:8px">
+            <div class="bar" style="height:32px">
+              <div class="brand"><div class="brand-diamond" style="width:11px;height:11px"></div></div>
+              <div class="status-group" style="gap:6px">
+                <div class="status-dot dot-red" style="width:6px;height:6px"></div>
+                <span class="rec-label" style="font-size:11px">REC 02:34</span>
+              </div>
+              <div class="bar-controls">
+                <button class="bar-btn" style="font-size:12px">⌄</button>
+                <button class="bar-btn" style="font-size:8px">●</button>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#6B7280">Bar · 320×36px</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:18px;color:#4B5563;margin-top:24px">→</div>
+        <div>
+          <div style="font-size:10px;color:#4B5563;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;font-weight:600">Niveau 3</div>
+          <div class="overlay overlay-320" style="margin-bottom:8px">
+            <div class="bar" style="height:32px">
+              <div class="brand"><div class="brand-diamond" style="width:11px;height:11px"></div></div>
+              <div class="status-group" style="gap:6px">
+                <div class="status-dot dot-red" style="width:6px;height:6px"></div>
+                <span class="rec-label" style="font-size:11px">REC 02:34</span>
+              </div>
+              <div class="bar-controls">
+                <button class="bar-btn" style="font-size:12px">⌃</button>
+                <button class="bar-btn" style="font-size:8px">●</button>
+              </div>
+            </div>
+            <div class="hint-panel" style="min-height:40px;padding:8px 14px 8px 17px">
+              <div class="hint-accent accent-amber"></div>
+              <div class="hint-content">
+                <div class="hint-text" style="font-size:13px;margin-bottom:0">Anerkend indvending…</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#6B7280">Fuld · 320×~140px</div>
+        </div>
+      </div>
+    </div>
+    <p class="state-desc">Sælgeren skifter frit mellem niveauer. Default ved session-start: niveau 2 (bar). Præference gemmes per bruger.</p>
+  </div>
+</div>
+
+<script>
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

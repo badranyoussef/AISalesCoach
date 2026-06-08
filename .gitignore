@@ -1,0 +1,39 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.log
+*.nupkg
+*.snupkg
+TestResults/
+coverage/
+.idea/
+
+# Secrets — never commit
+appsettings.*.json
+!appsettings.json
+
+# Claude Code local settings (machine-specific, never commit)
+.claude/settings.local.json
+*.pfx
+*.p12
+secrets.json
+.env
+.env.*
+
+# Node / Web
+node_modules/
+dist/
+.vite/
+*.local
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Rider / VS Code
+.idea/
+.vscode/
+*.DotSettings
