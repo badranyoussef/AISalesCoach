@@ -1,6 +1,6 @@
 # AiSalesCoach — Status og næste skridt
 
-Sidst opdateret: 2026-06-04
+Sidst opdateret: 2026-06-09
 
 ---
 
@@ -60,7 +60,7 @@ Et komplet virtuelt konsulentteam der dækker hele produktets livscyklus.
 | `efcore-guide` | Sonnet | EF Core 10 + Npgsql, migrations |
 | `dotnet-build-resolver` | Sonnet | .NET build-fejl, NuGet, XAML |
 | `database-reviewer` | Sonnet | PostgreSQL queries, schema, performance |
-| `security-reviewer` | Sonnet | JWT, auth, OWASP, secrets |
+| `security-reviewer` | Opus | JWT, auth, OWASP, secrets, AiSalesCoach threat model |
 | `tdd-guide` | Sonnet | Test-first workflow, xUnit, Vitest |
 
 #### AI & Realtime (4 agenter)
@@ -98,6 +98,11 @@ Et komplet virtuelt konsulentteam der dækker hele produktets livscyklus.
 |-----|---------|
 | `aisalescoach.md` | Kodestandarder, SOLID/DRY/YAGNI, design principper, agent routing-tabel |
 | `product-context.md` | **Komplet produktviden** — læses automatisk af alle agenter. Dual-stream STT, 20s chunk-arkitektur, domænemodel, 3 klientoverflader, POC-indsigter, forretningskonstanter. **SKAL opdateres ved produktændringer.** |
+| `clean-architecture.md` | Hard rule — forbudte imports, grep-kommandoer til verifikation, fix-mønstre for violations |
+| `security-by-design.md` | AiSalesCoach threat model (adversarial audio, Deepgram key, customer_state), OWASP Top 10, GDPR, prompt injection defense |
+| `code-standards.md` | 80% testdækning, Result\<T\>, async-regler, navngivningstabel, performance-targets |
+| `honesty.md` | Read-token krav, ærlighed og pålidelighed for alle agenter |
+| `lessons-learned.md` | Akkumuleret viden — opdateres automatisk af retro-workflow efter hver feature |
 
 ---
 
@@ -146,16 +151,24 @@ parallel: csharp-reviewer + clean-arch-guardian + security-reviewer
 
 ---
 
-## Fixes udført 2026-06-04
+## Fixes og forbedringer
 
-Claude Code opsætning auditeret og bragt i orden inden første feature-udvikling:
-
+### 2026-06-04 — Initial opsætning
 1. ✅ `.gitignore` sikkerhedsbug — `!appsettings.Development.json` fjernet (ville have committet secrets)
-2. ✅ `.claude/settings.local.json` oprettet — 25 pre-godkendte kommandoer (dotnet, git, find, npm, npx). Forhindrer permission-prompts under parallelt agent-arbejde.
-3. ✅ CLAUDE.md syntaksfejl fixet (`læ#` → `#`)
-4. ✅ React-version harmoniseret til 19 (CLAUDE.md + react-developer.md)
+2. ✅ `.claude/settings.local.json` oprettet — 25 pre-godkendte kommandoer (dotnet, git, find, npm, npx)
+3. ✅ CLAUDE.md syntaksfejl fixet
+4. ✅ React-version harmoniseret til 19
 
-**Claude Code opsætning er nu klar til development.**
+### 2026-06-09 — "Software-fabrik" upgrade
+5. ✅ **Read-token enforcement** — alle 29 agent-prompts starter med obligatorisk fillæsning + `PostToolUse` hook der advarer ved manglende token
+6. ✅ **Pre-commit hook** — `pre-commit-check.py` blokerer `git commit` ved Clean Architecture violations
+7. ✅ **3 nye rule-filer** — `clean-architecture.md`, `security-by-design.md`, `code-standards.md` (auto-loades af alle agenter)
+8. ✅ **CLAUDE.md** — tilføjet DDD, SignalR, Quality Gates-tabel, AI Ethics-sektion
+9. ✅ **feature-build.js** — TDD-fase (min. 80% dækning) + automatisk retro som afsluttende fase
+10. ✅ **planner Output Contract** — præcist handoff-format til downstream agenter
+11. ✅ **typescript-reviewer + react-reviewer** — AiSalesCoach-specifikke mønstre tilføjet
+
+**Claude Code opsætning er på konsulenthus-niveau.**
 
 ---
 

@@ -35,6 +35,9 @@ Phase 2 — Domain + Contracts (PARALLELT)
 Phase 3 — Application
   dotnet-developer
 
+Phase 3b — Tests  ← NYT
+  tdd-guide (xUnit tests, min. 80% dækning på Application-laget)
+
 Phase 4 — Infrastructure
   dotnet-developer (+ EF Core migration hvis needs_migration=true)
 
@@ -48,6 +51,9 @@ Phase 7 — Review (PARALLELT)
   csharp-reviewer  ║  arch-guardian  ║  security-reviewer
   + compliance-specialist (hvis audio/GDPR-risici)
   + ai-safety-specialist (hvis LLM/coaching-risici)
+
+Phase 8 — Retro  ← NYT
+  retro-workflow (opdaterer lessons-learned.md automatisk)
 ```
 
 ---
