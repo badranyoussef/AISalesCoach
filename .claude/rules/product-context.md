@@ -1,5 +1,4 @@
 # AiSalesCoach — Produktkontekst (læses af alle agenter)
-<!-- FILETOKEN: Nx7vP -->
 
 ## ⚠️ Vedligeholdelsesregel — KRITISK
 
@@ -30,10 +29,10 @@ Dette dokument giver ALLE agenter den fælles produktforståelse de skal have fo
 
 En **AI-drevet real-time salgscoaching platform** med tre klientoverflader der deler én backend:
 
-| Overflade | Formål | Brugssituation |
-|-----------|--------|----------------|
-| **Desktop overlay** (Avalonia) | Real-time coaching *under* et opkald | Sælger ser hints mens de taler |
-| **Web dashboard** (React) | Post-call analyse, framework-styring, pipeline | Sælger + salgschef *efter* opkald |
+| Overflade | Formål                                              | Brugssituation |
+|-----------|-----------------------------------------------------|----------------|
+| **Desktop overlay** (Avalonia) | Real-time coaching *under* et opkald via desktop    | Sælger ser hints mens de taler |
+| **Web dashboard** (React) | Post-call analyse, framework-styring, pipeline      | Sælger + salgschef *efter* opkald |
 | **Browser extension** (Chrome/Edge MV3) | Samme real-time coaching som desktop, men i browser | Web-møder (Zoom web, Teams web) |
 
 ---

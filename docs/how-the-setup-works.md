@@ -19,7 +19,7 @@ Syv filer indlæses automatisk i enhver agent-kørsel:
 ```
 .claude/rules/product-context.md       ← Hvad produktet er, domænemodel, arkitektur
 .claude/rules/aisalescoach.md          ← Kodestandarder, navngivning, sikkerhedsregler, agent-routing
-.claude/rules/honesty.md               ← Ærlighed og read-token krav
+.claude/rules/honesty.md               ← Ærlighed, grounding og anti-gætteri krav
 .claude/rules/lessons-learned.md      ← Akkumuleret viden fra tidligere features
 .claude/rules/clean-architecture.md   ← Laggrænser, forbudte imports, grep-kommandoer
 .claude/rules/security-by-design.md   ← AiSalesCoach threat model, OWASP, GDPR, prompt injection
@@ -51,7 +51,7 @@ security-reviewer─┘
 ```
 
 **Mønster C — Workflow-script (deterministisk orkestrering)**
-`feature-build.js` kombinerer begge mønstre i ét script med 9 faser. Planner returnerer et schema-valideret JSON-objekt som alle downstream agenter bruger direkte — ingen fortolkning, ingen fejl.
+`feature-build.js` kombinerer begge mønstre i ét script med 13 faser og **håndhævede gates**: hver implementeringsfase returnerer et schema-valideret build-resultat, fejl udløser automatisk `dotnet-build-resolver`, og kan fejlen ikke repareres stopper workflowet med `status: 'failed'`. Planner returnerer et schema-valideret JSON-objekt som alle downstream agenter bruger direkte — ingen fortolkning, ingen fejl.
 
 ---
 
@@ -62,36 +62,44 @@ Bruger: "/feature byg auth"
     │
     ▼
 feature.md (kommando til tech-lead)
-    │  afklar krav (max 2 spørgsmål)
+    │  1. afklar krav (max 2 spørgsmål)
+    │  2. planner laver struktureret plan (PLAN_SCHEMA)
+    │  3. ⛔ GODKENDELSES-GATE: brugeren godkender planen FØR der bygges
     ▼
-Workflow: feature-build.js
+Workflow: feature-build.js (modtager den godkendte plan via args.plan)
     │
-    ├── Phase 1: planner (Opus)
-    │       Læser kodebasen + rules-filer
-    │       Returnerer struktureret JSON: entiteter, DTOs, endpoints, risici
+    ├── Phase 1: Plan — springes over hvis godkendt plan medsendes
+    │       Planen indeholder needs_compliance_review + needs_ai_safety_review
+    │       (struktureret beslutning fra planner — IKKE keyword-matching)
     │
-    ├── Phase 2: domain-developer + contracts-developer (parallelt, Sonnet)
+    ├── Phase 2: domain + contracts (parallelt, Sonnet)   ⛔ build-gate
+    ├── Phase 3: application (Sonnet)                     ⛔ build-gate
+    ├── Phase 3b: tdd-guide — unit tests, min. 80%        ⛔ test-gate
+    ├── Phase 4: infrastructure (Sonnet)                  ⛔ build-gate
+    ├── Phase 5: api (Sonnet)                             ⛔ build-gate
+    ├── Phase 5b: tdd-guide — integration tests/endpoint  ⛔ build-gate
+    ├── Phase 5c: ui-designer (Opus) — kun hvis needs_ui_design
+    ├── Phase 6: desktop + web + extension (parallelt)    ⛔ build-gate pr. klient
     │
-    ├── Phase 3: application-developer (Sonnet)
+    │   Hver ⛔ build-gate: fejler buildet → dotnet-build-resolver kaldes
+    │   automatisk (én runde). Stadig rødt → workflowet STOPPER med status 'failed'.
     │
-    ├── Phase 3b: tdd-guide (Sonnet)  ← skriver xUnit tests, min. 80% dækning
+    ├── Phase 7: VERIFIKATION — dotnet build + dotnet test på HELE solutionen
+    │       Fejler → én samlet reparationsrunde → re-verifikation → ellers 'failed'
     │
-    ├── Phase 4: infrastructure-developer (Sonnet)
-    │
-    ├── Phase 5: api-developer (Sonnet)
-    │
-    ├── Phase 5b: ui-designer (Opus) — kun hvis needs_ui_design=true
-    │
-    ├── Phase 6: desktop + web + extension (parallelt, Sonnet)
-    │       Starter KUN efter Phase 5 — læser Contracts-projektet
-    │
-    ├── Phase 7: review (parallelt)
+    ├── Phase 8: review (parallelt, struktureret severity-output)
     │       csharp-reviewer + arch-guardian + security-reviewer (altid)
-    │       + compliance-specialist (hvis audio/GDPR-risici)
-    │       + ai-safety-specialist (hvis LLM-features)
+    │       + compliance-specialist (hvis plan.needs_compliance_review)
+    │       + ai-safety-specialist (hvis plan.needs_ai_safety_review)
     │
-    └── Phase 8: retro (automatisk)
-            Opdaterer lessons-learned.md med mønstre fra dette byggeri
+    ├── Phase 9: FIX-LOOP — CRITICAL/HIGH findings rettes automatisk,
+    │       re-review + re-verifikation. Består fund → status 'blocked'
+    │       (featuren er IKKE done — kræver manuel stillingtagen)
+    │
+    └── Phase 10: retro (automatisk)
+            Opdaterer lessons-learned.md + shared-components.md
+
+Returværdi: { status: 'done' | 'failed' | 'blocked', gates: {...} }
 ```
 
 ---
@@ -128,22 +136,21 @@ Næste feature: alle agenter ser de nye entries automatisk
 ## 6. Sikring af at agenter har læst det nødvendige
 
 **Niveau 1 — Automatisk (rules-filer):**
-Alt i `.claude/rules/` loades automatisk. Agenter behøver ikke gøre noget — de ser det altid.
+Alt i `.claude/rules/` loades automatisk som projektinstruktioner. Agenter behøver ikke gøre noget — de ser det altid. Hver agent-prompt indeholder desuden en grounding-sektion der kræver at reglerne efterleves og at `product-context.md` konsulteres ved tvivl frem for at gætte (`honesty.md`).
 
-**Niveau 2 — FILETOKEN-system:**
-`product-context.md` og `aisalescoach.md` indeholder skjulte tokens (`Nx7vP` og `Qm3kR`). Alle 29 agent-prompts starter med eksplicit instruktion om at læse begge filer og returnere `*Nx7vP-Qm3kR-read*` som allerførste linje. En agent der ikke har læst filerne kender ikke tokenerne.
+> **Historik**: Tidligere fandtes et FILETOKEN-system hvor agenter skulle returnere et token (`*Nx7vP-Qm3kR-read*`) som bevis på at de havde læst rules-filerne. Det blev fjernet 2026-06-11: tokenværdien stod hardcodet i agent-prompterne (beviste derfor ingenting), og rules-filerne auto-loades alligevel. Mekanismen kostede kun kontekst og gav falsk tryghed.
 
-**Niveau 3 — PostToolUse hook:**
-`settings.json` kører `check-read-token.py` efter hvert Agent-kald. Mangler tokenet i svaret, vises en advarsel i konteksten med præcis hvad agenten skal gøre.
-
-**Niveau 4 — Eksplicit instruktion i agent-prompts:**
+**Niveau 2 — Eksplicit instruktion i agent-prompts:**
 `dotnet-developer`: *"Læs AiSalesCoach.Contracts/ inden du implementerer API-kald"*
 `desktop-developer`: *"Byg IKKE mod et endpoint der ikke er i docs/api-contracts.md"*
 
-**Niveau 5 — Pre-commit hook:**
-`settings.json` kører `pre-commit-check.py` inden ethvert `git commit`. Scriptet scanner Domain, Application og Desktop for forbudte imports (Clean Architecture violations). **Exit code 2 blokerer committet** hvis violations findes.
+**Niveau 3 — Pre-commit hook:**
+`settings.json` kører `pre-commit-check.py` på alle Bash-kald (hook-matchere matcher kun tool-NAVNE, så scriptet filtrerer selv: kun `git commit`-kommandoer udløser scanningen). Scriptet scanner Domain, Application og Desktop for forbudte imports (Clean Architecture violations). **Exit code 2 blokerer committet** hvis violations findes.
 
-**Niveau 6 — `docs/api-contracts.md`:**
+**Niveau 4 — Workflow-gates (feature-build.js):**
+Hver implementeringsfase returnerer schema-valideret build-status. Workflowet stopper hårdt ved rød build/test og blokerer ved uløste CRITICAL/HIGH review-findings. En agent kan ikke "rapportere sig forbi" en gate — `honesty.md` forbyder falsk grøn rapportering, og verifikationsfasen genkører build+test uafhængigt.
+
+**Niveau 5 — `docs/api-contracts.md`:**
 Opdateres af `dotnet-developer` efter hvert backend-build. Frontend-agenter læser den inden de implementerer. Det er den eneste kilde til sandhed om hvad der er tilgængeligt.
 
 ---
@@ -173,27 +180,32 @@ Grundregel: **design, strategi og sikkerhed = Opus, implementering og review = S
 
 ## 9. Kommandoer i praksis
 
-| Kommando | Hvornår |
-|----------|---------|
-| `/feature [beskrivelse]` | Byg en ny feature end-to-end (9 faser inkl. tests + retro) |
-| `/plan [beskrivelse]` | Planlæg uden at bygge — få plan til godkendelse |
-| `/review` | Code review af alle ændrede filer |
-| `/retro` | Manuel retro — opdater hvad systemet ved (normalt automatisk) |
-| `/idea [idé]` | Evaluer en produktidé med RICE-score |
+| Kommando | Workflow bagved | Hvornår |
+|----------|----------------|---------|
+| `/feature [beskrivelse]` | `feature-build.js` | Byg en ny feature end-to-end med godkendelses-gate + håndhævede quality gates |
+| `/plan [beskrivelse]` | `plan-feature.js` | Planlæg uden at bygge — triage + parallel analyse + syntese til godkendelse |
+| `/review` | `review.js` | Code review af alle ændrede filer — auto-detekterede reviewers parallelt |
+| `/retro` | `retro.js` | Manuel retro — opdater hvad systemet ved (kører normalt automatisk) |
+| `/idea [idé]` | (direkte) | Evaluer en produktidé med RICE-score |
+
+Alle kommandoer er tynde indgange — orkestreringslogikken bor i workflow-scriptet, ét sted.
 
 ---
 
 ## 10. Quality Gates — hvad der blokerer en feature
 
-En feature er **ikke done** uden at alle gates er grønne:
+En feature er **ikke done** uden at alle gates er grønne. Gates er HÅNDHÆVET i `feature-build.js` — ikke kun dokumenteret:
 
-| Gate | Krav | Hvornår tjekkes |
-|------|------|----------------|
-| Build | `dotnet build` — ingen fejl, ingen warnings | Phase 3-5 (hvert lag bygger) |
-| Tests | ≥80% dækning på Application-laget | Phase 3b (tdd-guide) |
-| Arkitektur | Ingen layer violations | Phase 7 (arch-guardian) + pre-commit hook |
-| Sikkerhed | Ingen CRITICAL/HIGH findings | Phase 7 (security-reviewer) |
-| Code Review | Ingen CRITICAL/HIGH findings | Phase 7 (csharp-reviewer m.fl.) |
+| Gate | Krav | Håndhævelse |
+|------|------|-------------|
+| Plan-godkendelse | Brugeren godkender planen inden build | `/feature` Trin 2 (AskUserQuestion) |
+| Build | `dotnet build` — ingen fejl | Schema-valideret per fase; fejl → auto build-resolver → ellers `status: 'failed'` |
+| Tests | ≥80% unit test dækning (Application), integration test per endpoint | Test-gate Phase 3b/5b + fuld `dotnet test` i Verifikations-fasen |
+| Fuld verifikation | Hele solutionen bygger + alle tests grønne | Phase 7 — uafhængig genkørsel, én reparationsrunde, ellers `failed` |
+| Arkitektur | Ingen layer violations | Review-fase (arch-guardian) + pre-commit hook (exit 2 blokerer) |
+| Sikkerhed | Ingen CRITICAL/HIGH findings | Findings-schema → fix-loop → består fund: `status: 'blocked'` |
+| Code Review | Ingen CRITICAL/HIGH findings | Samme fix-loop som sikkerhed |
+| Compliance/AI-safety | Review når planens flags kræver det | `needs_compliance_review`/`needs_ai_safety_review` fra planner (konservativ: i tvivl → true) |
 | Dokumentation | `docs/api-contracts.md` opdateret | Phase 5 (api-developer) |
 
 ---

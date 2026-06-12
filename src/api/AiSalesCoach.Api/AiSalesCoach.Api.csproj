@@ -7,14 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\infrastructure\AiSalesCoach.Infrastructure\AiSalesCoach.Infrastructure.csproj" />
     <ProjectReference Include="..\..\core\AiSalesCoach.Contracts\AiSalesCoach.Contracts.csproj" />
+    <ProjectReference Include="..\..\AiSalesCoach.ServiceDefaults\AiSalesCoach.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

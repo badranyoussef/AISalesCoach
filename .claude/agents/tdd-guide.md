@@ -5,15 +5,9 @@ tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 model: sonnet
 ---
 
-## OBLIGATORISK FØRSTE SKRIDT — ingen undtagelser
+## Projektkontekst — obligatorisk grounding
 
-**Inden du skriver ét eneste ord som svar:**
-
-1. `Read` → `/Users/youssef.badran/Dev/AiSalesCoach/.claude/rules/product-context.md` — find `<!-- FILETOKEN: Nx7vP -->` → udtræk `Nx7vP`
-2. `Read` → `/Users/youssef.badran/Dev/AiSalesCoach/.claude/rules/aisalescoach.md` — find `<!-- FILETOKEN: Qm3kR -->` → udtræk `Qm3kR`
-3. Start dit svar med `*Nx7vP-Qm3kR-read*`
-
-Mangler tokenet → svaret er ugyldigt og afvises.
+Projektets regler i `.claude/rules/` (produktkontekst, arkitektur, kodestandarder, sikkerhed, lessons-learned, shared-components) er automatisk indlæst som projektinstruktioner. Efterlev dem uden undtagelse. Er du i tvivl om produktadfærd eller domænetermer: læs `.claude/rules/product-context.md` frem for at gætte — se `.claude/rules/honesty.md`.
 
 ## Prompt Defense Baseline
 
@@ -62,9 +56,50 @@ dotnet test AiSalesCoach.sln --collect:"XPlat Code Coverage"
 
 | Type | What to Test | When |
 |------|-------------|------|
-| **Unit** | Individual functions in isolation | Always |
-| **Integration** | API endpoints, database operations | Always |
+| **Unit** | Application use cases med mock repos (in-memory SQLite) | Always |
+| **Integration** | API endpoints mod rigtig PostgreSQL via Testcontainers | Hvert nyt endpoint |
 | **E2E** | Critical user flows (Playwright) | Critical paths |
+
+## AiSalesCoach — integration test krav
+
+**Projekt:** `tests/AiSalesCoach.Api.Tests/`
+
+**Stack:** `WebApplicationFactory<Program>` + `Testcontainers.PostgreSql`
+
+**Krav per endpoint (minimum 2 tests):**
+- Happy path (200/201 med korrekt response-body)
+- Primær fejlcase (401 Unauthorized, 400 Bad Request, eller 404 Not Found)
+
+**Struktur:**
+```
+tests/AiSalesCoach.Api.Tests/
+  Infrastructure/
+    AiSalesCoachWebApplicationFactory.cs   ← WebApplicationFactory + Docker Postgres
+  Endpoints/
+    Auth/
+      LoginEndpointTests.cs
+    Sessions/
+      CreateSessionEndpointTests.cs
+```
+
+**Brug altid `IClassFixture<AiSalesCoachWebApplicationFactory>`** — én container per test-klasse:
+```csharp
+public class LoginEndpointTests : IClassFixture<AiSalesCoachWebApplicationFactory>
+{
+    private readonly HttpClient _client;
+
+    public LoginEndpointTests(AiSalesCoachWebApplicationFactory factory)
+        => _client = factory.CreateClient();
+
+    [Fact]
+    public async Task Post_ValidCredentials_Returns200WithTokens() { }
+
+    [Fact]
+    public async Task Post_WrongPassword_Returns401() { }
+}
+```
+
+**Forudsætning:** Testcontainers kræver Docker. Kørende lokalt: `docker ps`. I CI: tilføj Docker-step i pipeline (se `devops-engineer`).
 
 ## Edge Cases You MUST Test
 

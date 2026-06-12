@@ -7,11 +7,43 @@ export const meta = {
   ],
 }
 
-const feature = typeof args === 'string' ? args : (args && args.feature ? args.feature : 'ukendt feature')
-const featureLower = feature.toLowerCase()
+const TRIAGE_SCHEMA = {
+  type: 'object',
+  required: ['touches_audio_or_personal_data', 'touches_ai', 'reasoning'],
+  properties: {
+    touches_audio_or_personal_data: {
+      type: 'boolean',
+      description: 'true hvis featuren berører audio, optagelse, stemmedata, transcripts, persondata, samtykke eller data retention',
+    },
+    touches_ai: {
+      type: 'boolean',
+      description: 'true hvis featuren involverer LLM-kald, prompts, coaching hints, customer_state eller AI-genereret indhold',
+    },
+    reasoning: { type: 'string' },
+  },
+}
 
-// ── Phase 1: Parallel analyse ──────────────────────────────────────────────
+const feature = typeof args === 'string' ? args : (args && args.feature ? args.feature : 'ukendt feature')
+
+// ── Phase 1: Triage + parallel analyse ─────────────────────────────────────
 phase('Analyse')
+
+// Struktureret triage i stedet for keyword-matching på feature-titlen.
+// Falske negative er farlige (skippet GDPR/AI-review) — vær konservativ: i tvivl → true.
+const triage = await agent(
+  `Du klassificerer en feature for AiSalesCoach (AI-drevet real-time salgscoaching med audio-optagelse).
+Læs .claude/rules/product-context.md for produktforståelse.
+
+Feature: "${feature}"
+
+Afgør:
+- touches_audio_or_personal_data: berører featuren audio, optagelse, stemmedata, transcripts, persondata, samtykke eller retention — direkte ELLER indirekte (fx en feature der viser transcript-data)?
+- touches_ai: involverer featuren LLM-kald, prompts, hints, customer_state eller andet AI-genereret indhold — direkte ELLER indirekte?
+
+Vær konservativ: er du i tvivl, sæt flaget til true. Et overflødigt review er billigt — et skippet review er dyrt.`,
+  { label: 'triage', phase: 'Analyse', schema: TRIAGE_SCHEMA }
+)
+log('Triage: audio/persondata=' + triage.touches_audio_or_personal_data + ', ai=' + triage.touches_ai + ' — ' + triage.reasoning)
 
 const analyseTasks = [
   () => agent(
@@ -49,10 +81,7 @@ Returner:
   ),
 ]
 
-const touchesAudio = featureLower.includes('audio') || featureLower.includes('optagelse') || featureLower.includes('session') || featureLower.includes('coaching') || featureLower.includes('stream')
-const touchesAi = featureLower.includes('hint') || featureLower.includes('coaching') || featureLower.includes('ai') || featureLower.includes('analyse') || featureLower.includes('llm')
-
-if (touchesAudio) {
+if (triage.touches_audio_or_personal_data) {
   analyseTasks.push(() => agent(
     `Du er compliance-specialist for AiSalesCoach. Analysér compliance-krav for feature: "${feature}"
 
@@ -66,7 +95,7 @@ Returner:
   ))
 }
 
-if (touchesAi) {
+if (triage.touches_ai) {
   analyseTasks.push(() => agent(
     `Du er ai-safety-specialist for AiSalesCoach. Analysér AI-sikkerhedskrav for feature: "${feature}"
 

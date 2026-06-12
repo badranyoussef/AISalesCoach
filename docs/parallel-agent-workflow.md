@@ -1,145 +1,118 @@
 # AiSalesCoach — Parallel Agent Workflow
 
-Sidst opdateret: 2026-06-04
+Sidst opdateret: 2026-06-11
 
 ---
 
 ## Oversigt
 
-AiSalesCoach bruger to mekanismer til at køre agenter parallelt:
+Al orkestrering bor i workflow JS-scripts i `.claude/workflows/`. Markdown-kommandoerne i `.claude/commands/` er tynde indgange der kalder workflowet — de duplikerer aldrig orkestreringslogik (beslutning 2026-06-11, se `lessons-learned.md`).
 
-| Mekanisme | Brugt til | Fordele |
-|-----------|-----------|---------|
-| **Markdown-kommando** (direkte Agent-kald) | `/review`, `/plan` | Simpelt, direkte, ingen ekstra lag |
-| **Workflow JS-script** | `/feature` | Schema-baseret dataflow, resume ved fejl, synlighed |
+| Kommando | Workflow | Hvad den gør |
+|----------|----------|--------------|
+| `/feature` | `feature-build.js` | End-to-end build med godkendelses-gate + håndhævede quality gates |
+| `/plan` | `plan-feature.js` | Triage + parallel analyse + tech-lead-syntese |
+| `/review` | `review.js` | Auto-detekterer ændrede filer, kører relevante reviewers parallelt |
+| `/retro` | `retro.js` | Ekstraherer lessons + delte komponenter fra seneste commits |
 
 ---
 
-## Nuværende setup
+## `/feature` → feature-build.js
 
-### `/feature` → Workflow-script
-
-Kommandoen `feature.md` kalder `Workflow({name: 'feature-build'})`.
-
-**Hvorfor Workflow her:** Plannerens strukturerede JSON-output (schema-valideret) flyder direkte til downstream agenter. Det eliminerer fortolkningsfejl og gør lange builds resumable.
+Kommandoen `feature.md`:
+1. Afklarer krav (max 2 spørgsmål)
+2. Kalder `planner` for struktureret plan (PLAN_SCHEMA)
+3. **⛔ Godkendelses-gate**: brugeren godkender planen (AskUserQuestion) FØR der bygges
+4. Kalder `Workflow({name: 'feature-build', args: {feature, plan}})` med den godkendte plan
 
 **Faser i `feature-build.js`:**
 
 ```
-Phase 1 — Plan
-  planner (schema → struktureret JSON)
+Phase 1  — Plan (springes over hvis args.plan medsendes)
+           Planen indeholder needs_compliance_review + needs_ai_safety_review
+           (strukturerede planner-beslutninger — ikke keyword-matching)
 
-Phase 2 — Domain + Contracts (PARALLELT)
-  dotnet-developer (Domain)  ║  dotnet-developer (Contracts)
+Phase 2  — Domain ║ Contracts (PARALLELT)          ⛔ build-gate
+Phase 3  — Application                             ⛔ build-gate
+Phase 3b — Unit Tests (tdd-guide, min. 80%)        ⛔ test-gate
+Phase 4  — Infrastructure (+ migration hvis needs_migration)  ⛔ build-gate
+Phase 5  — Api (minimal API endpoints)             ⛔ build-gate
+Phase 5b — Integration Tests (WebApplicationFactory + Testcontainers)  ⛔ build-gate
+Phase 5c — UI Design (kun hvis needs_ui_design)
+Phase 6  — Desktop ║ Web ║ Extension (PARALLELT)   ⛔ build-gate pr. klient
 
-Phase 3 — Application
-  dotnet-developer
+  ⛔ build-gate: agenten returnerer schema-valideret {build_succeeded, errors}.
+  Rød → dotnet-build-resolver kaldes automatisk (én runde).
+  Stadig rød → workflowet STOPPER: { status: 'failed', failed_phase, errors }
 
-Phase 3b — Tests  ← NYT
-  tdd-guide (xUnit tests, min. 80% dækning på Application-laget)
+Phase 7  — VERIFIKATION: dotnet build + dotnet test på HELE solutionen
+           (uafhængig genkørsel — agenten må ikke rette kode, kun rapportere)
+           Rød → én samlet reparationsrunde → re-verifikation → ellers 'failed'
 
-Phase 4 — Infrastructure
-  dotnet-developer (+ EF Core migration hvis needs_migration=true)
+Phase 8  — Review (PARALLELT, struktureret findings-output med severity)
+           csharp-reviewer ║ arch-guardian ║ security-reviewer (altid)
+           + compliance-specialist (hvis plan.needs_compliance_review)
+           + ai-safety-specialist (hvis plan.needs_ai_safety_review)
 
-Phase 5 — Api
-  dotnet-developer
+Phase 9  — FIX-LOOP (kun hvis CRITICAL/HIGH findings)
+           Fund routes til rette developer-agent (pr. filtype) → rettes →
+           re-review af de reviewers der fandt dem → re-verifikation.
+           Består fund → { status: 'blocked', blocking_findings }
 
-Phase 6 — Clients (PARALLELT, kun dem planner markerede needed)
-  desktop-developer  ║  react-developer  ║  extension-developer
+Phase 10 — Retro (retro-workflow opdaterer lessons-learned + shared-components)
+```
 
-Phase 7 — Review (PARALLELT)
-  csharp-reviewer  ║  arch-guardian  ║  security-reviewer
-  + compliance-specialist (hvis audio/GDPR-risici)
-  + ai-safety-specialist (hvis LLM/coaching-risici)
+**Returværdi:** `{ status: 'done' | 'failed' | 'blocked', gates: {...}, non_blocking_findings: [...] }`
+Tech-lead erklærer ALDRIG en feature done hvis status ikke er `'done'`.
 
-Phase 8 — Retro  ← NYT
-  retro-workflow (opdaterer lessons-learned.md automatisk)
+---
+
+## `/plan` → plan-feature.js
+
+```
+Phase 1 — Triage (schema: touches_audio_or_personal_data, touches_ai)
+          Konservativ regel: i tvivl → true
+        — Derefter PARALLELT:
+          planner ║ efcore-guide ║ security-reviewer
+          + compliance-specialist (hvis triage: audio/persondata)
+          + ai-safety-specialist (hvis triage: AI)
+
+Phase 2 — Syntese (tech-lead samler alle analyser til én plan)
 ```
 
 ---
 
-### `/review` → Direkte Agent-kald
-
-Kommandoen `review.md` instruerer tech-lead til at kalde relevante reviewers parallelt via Agent-værktøjet.
-
-**Relevante reviewers per filtype:**
-- `.cs` → `csharp-reviewer` + `clean-arch-guardian` + `security-reviewer`
-- `.axaml` / `.axaml.cs` → `avalonia-reviewer`
-- `.tsx` / `.ts` → `react-reviewer` + `typescript-reviewer`
-- Migrations/DbContext → `database-reviewer`
-- AI-prompts/hint-logik → `ai-safety-specialist`
-
----
-
-### `/plan` → Direkte Agent-kald
-
-Kommandoen `plan.md` kører disse agenter parallelt:
-- `planner` + `clean-arch-guardian` + `efcore-guide` + `security-reviewer`
-- `compliance-specialist` (hvis audio/persondata)
-- `ai-safety-specialist` (hvis LLM-features)
-
----
-
-## Workflow-scripts der eksisterer
-
-Alle tre scripts ligger i `.claude/workflows/` og er klar til brug:
-
-| Script | `meta.name` | Status |
-|--------|------------|--------|
-| `feature-build.js` | `feature-build` | Aktiv — bruges af `/feature` |
-| `review.js` | `review` | Inaktiv — script klar, kommando bruger det ikke |
-| `plan-feature.js` | `plan-feature` | Inaktiv — script klar, kommando bruger det ikke |
-
----
-
-## Hvornår skal Workflow-scripts bruges?
-
-Brug Workflow-script når **alle tre** er sande:
-1. Struktureret data skal flyde fra én agent til de næste (schema-valideret output)
-2. Buildet har 3+ sekventielle faser der kan fejle midt i (resume er relevant)
-3. Manuel koordinering er fejlbehæftet pga. kompleksitet
-
-Brug direkte Agent-kald (markdown-kommando) når:
-- Faserne er uafhængige af hinanden (ingen data skal videregives)
-- Workflowet er kort nok til at resume ikke er nødvendigt
-
----
-
-## Sådan aktiveres Workflow for /review
-
-Erstat indholdet af `.claude/commands/review.md` med:
+## `/review` → review.js
 
 ```
-Du er tech-lead for AiSalesCoach.
+Phase 1 — Detect (schema: has_csharp, has_desktop_xaml, has_react, ...)
+          git diff + git status → strukturerede flags
 
-Kald Workflow-værktøjet med:
-  name: 'review'
+Phase 2 — Review (PARALLELT, kun relevante reviewers):
+          .cs               → csharp-reviewer + clean-arch-guardian + security-reviewer
+          .axaml/.axaml.cs  → avalonia-reviewer
+          .tsx/.ts          → react-reviewer + typescript-reviewer
+          Migrations/DbContext → database-reviewer
+          AI-prompts/hint-logik → ai-safety-specialist
 ```
-
-Scriptet auto-detekterer filtyper og kører kun relevante reviewers.
 
 ---
 
-## Sådan aktiveres Workflow for /plan
+## Hvornår parallel vs. sekventiel?
 
-Erstat indholdet af `.claude/commands/plan.md` med:
+**Parallelliser når**: agenter evaluerer det samme fra uafhængige vinkler (security + arch + quality) eller bygger uafhængige artefakter (Domain ║ Contracts, Desktop ║ Web ║ Extension).
 
-```
-Du er tech-lead for AiSalesCoach. Brugeren vil PLANLÆGGE (ikke bygge endnu): $ARGUMENTS
-
-Kald Workflow-værktøjet med:
-  name: 'plan-feature'
-  args: { feature: '$ARGUMENTS' }
-```
-
-Scriptet kører planner + efcore + security + compliance + ai-safety parallelt og syntetiserer til én plan.
+**Sekvensér når**: output fra agent A er input til agent B (planner → developer, backend → clients). Clean Architecture-lagene bygges altid bottom-up.
 
 ---
 
 ## Args-format til feature-build
 
 ```js
-// Simpelt (feature-navn som string)
+// Anbefalet: med bruger-godkendt plan (fra /feature Trin 2)
+Workflow({ name: 'feature-build', args: { feature: 'byg auth', plan: <godkendt PLAN_SCHEMA-objekt> } })
+
+// Uden plan (workflowet planlægger selv — brug kun ved eksplicit "byg uden stop")
 Workflow({ name: 'feature-build', args: 'byg auth med login og refresh tokens' })
 
 // Med explicit klient-override

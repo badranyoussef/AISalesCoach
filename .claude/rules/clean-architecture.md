@@ -1,5 +1,4 @@
 # AiSalesCoach — Clean Architecture (Hard Rule)
-<!-- FILETOKEN: CaR7x -->
 
 Disse regler er absolutte. Violations blokerer commit og implementation.
 

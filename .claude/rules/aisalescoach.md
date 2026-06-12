@@ -1,5 +1,4 @@
 # AiSalesCoach — Projektregler
-<!-- FILETOKEN: Qm3kR -->
 
 Disse regler gælder for ALT arbejde i dette repository.
 
@@ -16,8 +15,11 @@ Disse regler gælder for ALT arbejde i dette repository.
 - **Avalonia**: 12.0.x — brug `WindowDecorations` ikke `SystemDecorations`
 - **EF Core**: 10.x med Npgsql provider
 - **MVVM**: CommunityToolkit.Mvvm 8.x — INGEN ReactiveUI, INGEN Fody
-- **API**: ASP.NET Core 10 med controllers (ikke minimal API)
+- **API**: ASP.NET Core 10 med **minimal API** + route groups — INGEN controllers
+- **Aspire**: .NET Aspire 9.x — `AppHost` orkestrerer API + PostgreSQL lokalt, `ServiceDefaults` giver OTel + health checks
 - **Web**: React 19 + TypeScript strict mode + Vite
+- **Mocking (tests)**: NSubstitute 5.x — INGEN Moq
+- **Pakkeversionering**: Central Package Management — versioner styres KUN i `Directory.Packages.props` i repo-roden. Aldrig `Version="..."` i individuelle `.csproj`-filer.
 
 ## Clean Architecture — ufravigelige regler
 

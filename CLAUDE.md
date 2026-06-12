@@ -23,14 +23,16 @@ docs/architecture.md                   — fuld arkitekturguide
 |-----|-----------|
 | Runtime | .NET 10.0, C# 13 |
 | Desktop | Avalonia 12.0.3, CommunityToolkit.Mvvm 8.x |
-| API | ASP.NET Core 10, JWT Bearer, Swagger |
+| API | ASP.NET Core 10, minimal API (route groups), JWT Bearer, Swagger |
 | ORM | EF Core 10 + Npgsql (PostgreSQL) |
 | CQRS | MediatR 14 |
 | Validering | FluentValidation 12 |
 | Real-time | SignalR (hint delivery API → Desktop/Extension) |
+| Aspire | .NET Aspire 9 — AppHost (lokal orchestration) + ServiceDefaults (OTel + health checks) |
 | Web | React 19, TypeScript, Vite, shadcn/ui, Tailwind |
 | Lyd | NAudio (Windows WASAPI), ScreenCaptureKit (macOS — stub) |
 | Transskription | Deepgram Nova-2 via WebSocket |
+| Mocking | NSubstitute 5.x (unit tests) |
 
 ## Arkitekturprincipper
 
@@ -63,7 +65,10 @@ dotnet build AiSalesCoach.sln
 # Kør alle tests
 dotnet test AiSalesCoach.sln
 
-# Kør API lokalt
+# Kør via Aspire (anbefalet — starter API + PostgreSQL automatisk)
+dotnet run --project src/AiSalesCoach.AppHost
+
+# Kør API direkte (uden Aspire)
 dotnet run --project src/api/AiSalesCoach.Api
 
 # Kør Desktop lokalt
@@ -84,7 +89,7 @@ En feature er **ikke done** uden at alle gates er grønne:
 | Gate | Krav | Agent |
 |------|------|-------|
 | Build | `dotnet build AiSalesCoach.sln` — ingen fejl, ingen warnings | `dotnet-build-resolver` |
-| Tests | `dotnet test` — alle grønne, ≥80% dækning på Application-laget | `tdd-guide` |
+| Tests | `dotnet test` — alle grønne, ≥80% unit test dækning (Application), integration test per API endpoint | `tdd-guide` |
 | Arkitektur | Ingen layer violations | `clean-arch-guardian` |
 | Sikkerhed | Ingen CRITICAL/HIGH findings | `security-reviewer` |
 | Code Review | Ingen CRITICAL/HIGH findings | `csharp-reviewer` / `avalonia-reviewer` / `react-reviewer` |

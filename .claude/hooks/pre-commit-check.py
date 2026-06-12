@@ -1,13 +1,33 @@
 #!/usr/bin/env python3
 """
-PreToolUse hook: block git commit if Clean Architecture violations are found.
-Exit code 2 blocks the Bash tool call (the git commit).
+PreToolUse hook on Bash: block `git commit` if Clean Architecture violations are found.
+
+Hook matchers match on tool NAME only ("Bash"), so this script receives ALL Bash
+calls and must itself decide whether the command is a git commit. For anything
+else it exits 0 immediately so normal shell use is unaffected.
+
+Exit code 2 blocks the tool call (the git commit) and feeds stderr back to Claude.
 """
+import json
 import os
 import re
 import sys
 
-ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
+# ── 1. Only act on git commit commands ──────────────────────────────────────
+try:
+    payload = json.load(sys.stdin)
+except (json.JSONDecodeError, ValueError):
+    sys.exit(0)
+
+command = str(payload.get("tool_input", {}).get("command", ""))
+
+# Matches "git commit", "git -C path commit", "git commit -m ..." — anywhere in
+# a compound command (e.g. "cd x && git commit"). Ignores "git committed" etc.
+if not re.search(r"\bgit\b[^|;&\n]*\bcommit\b", command):
+    sys.exit(0)
+
+# ── 2. Scan for Clean Architecture violations ───────────────────────────────
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SRC = os.path.join(ROOT, "src")
 
 FORBIDDEN = [
@@ -35,7 +55,8 @@ for path_fragment, pattern, label in FORBIDDEN:
     if not os.path.exists(search_dir):
         continue
     rx = re.compile(pattern)
-    for dirpath, _, filenames in os.walk(search_dir):
+    for dirpath, dirnames, filenames in os.walk(search_dir):
+        dirnames[:] = [d for d in dirnames if d not in ("bin", "obj")]
         for fn in filenames:
             if not fn.endswith(".cs"):
                 continue

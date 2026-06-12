@@ -2,20 +2,29 @@ Du er tech-lead for AiSalesCoach.
 
 Kør et komplet parallel code review af alle ændrede filer.
 
-1. Læs `.claude/rules/product-context.md` og `.claude/rules/aisalescoach.md` — start dit svar med `*Nx7vP-Qm3kR-read*`
+## Trin 1 — Kald review workflow
 
-2. Find alle ændrede filer: kør `git diff --name-only HEAD` og `git status`
+Kald Workflow-værktøjet med:
+```
+name: 'review'
+args: { scope: '<valgfrit scope, ellers alle aktuelle ændringer>' }
+```
 
-3. Grupper filerne efter type og kør disse reviewers PARALLELT:
-   - `.cs` filer → `csharp-reviewer`
-   - `.axaml` / `.axaml.cs` → `avalonia-reviewer`
-   - `.tsx` / `.ts` → `react-reviewer` + `typescript-reviewer`
-   - Alle `.cs` filer → `clean-arch-guardian` (laggrænser)
-   - Alle filer → `security-reviewer` (auth, input, tokens)
-   - Hvis AI-prompts eller hint-logik ændret → `ai-safety-specialist`
-   - Hvis migrations eller DbContext ændret → `database-reviewer`
+Workflowet:
+1. Detekterer ændrede filer (git diff + git status) og sætter strukturerede flags
+2. Kører alle relevante reviewers parallelt:
+   - `.cs` → csharp-reviewer + clean-arch-guardian + security-reviewer
+   - `.axaml` / `.axaml.cs` → avalonia-reviewer
+   - `.tsx` / `.ts` → react-reviewer + typescript-reviewer
+   - Migrations/DbContext → database-reviewer
+   - AI-prompts/hint-logik → ai-safety-specialist
 
-4. Saml alle fund og præsenter:
-   - Kritiske problemer (skal fixes inden merge)
-   - Advarsler (bør fixes)
-   - Godkendt (ingen problemer)
+## Trin 2 — Saml og præsentér
+
+Saml alle fund og præsentér efter severity:
+- **CRITICAL/HIGH** — skal fixes inden merge (bloker featuren indtil løst)
+- **MEDIUM** — bør fixes
+- **LOW** — valgfrit
+- **Godkendt** — ingen problemer
+
+Tilbyd at rette CRITICAL/HIGH fund med det samme via den relevante developer-agent.

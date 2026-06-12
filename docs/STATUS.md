@@ -164,9 +164,15 @@ parallel: csharp-reviewer + clean-arch-guardian + security-reviewer
 6. ✅ **Pre-commit hook** — `pre-commit-check.py` blokerer `git commit` ved Clean Architecture violations
 7. ✅ **3 nye rule-filer** — `clean-architecture.md`, `security-by-design.md`, `code-standards.md` (auto-loades af alle agenter)
 8. ✅ **CLAUDE.md** — tilføjet DDD, SignalR, Quality Gates-tabel, AI Ethics-sektion
-9. ✅ **feature-build.js** — TDD-fase (min. 80% dækning) + automatisk retro som afsluttende fase
+9. ✅ **feature-build.js** — unit test-fase (Phase 3b) + integration test-fase (Phase 5b, WebApplicationFactory + Testcontainers) + automatisk retro
 10. ✅ **planner Output Contract** — præcist handoff-format til downstream agenter
 11. ✅ **typescript-reviewer + react-reviewer** — AiSalesCoach-specifikke mønstre tilføjet
+
+### 2026-06-09 — Arkitektur upgrade
+12. ✅ **Minimal API** — controllers fjernet, endpoint-mønster med `RouteGroupBuilder` indført i `code-standards.md`
+13. ✅ **Aspire AppHost** — `src/AiSalesCoach.AppHost/` + `src/AiSalesCoach.ServiceDefaults/` oprettet og tilføjet til solution
+14. ✅ **NSubstitute** — tilføjet til Domain.Tests og Application.Tests; `Microsoft.EntityFrameworkCore.InMemory` tilføjet til Application.Tests
+15. ✅ **Program.cs** — migreret til minimal API, `public partial class Program {}` tilføjet for WebApplicationFactory
 
 **Claude Code opsætning er på konsulenthus-niveau.**
 

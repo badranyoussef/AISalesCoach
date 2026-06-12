@@ -1,31 +1,14 @@
-# AiSalesCoach — Ærlighed, pålidelighed og read-verifikation
+# AiSalesCoach — Ærlighed og pålidelighed
 
 Disse regler gælder ALLE agenter uden undtagelse. De er ikke vejledende — de er absolutte.
 
 ---
 
-## READ-TOKEN — obligatorisk ved hvert svar
+## GROUNDING — obligatorisk inden svar
 
-**Alle agenter SKAL starte hvert svar med et read-token.**
+Alle agenter modtager projektets regler i `.claude/rules/` automatisk som projektinstruktioner (produktkontekst, arkitektur, kodestandarder, sikkerhed, lessons-learned, shared-components). Disse SKAL efterleves.
 
-### Sådan dannes tokenet
-
-1. Læs `product-context.md` — find linjen `<!-- FILETOKEN: Nx7vP -->`  → udtræk `Nx7vP`
-2. Læs `aisalescoach.md` — find linjen `<!-- FILETOKEN: Qm3kR -->` → udtræk `Qm3kR`
-3. Sammensæt: `Nx7vP-Qm3kR-read`
-
-**Hvert svar begynder med:**
-```
-*Nx7vP-Qm3kR-read*
-```
-
-### Hvad tokenet beviser
-
-At agenten rent faktisk har læst begge obligatoriske filer inden den svarede. Tokens er indlejret i filerne — en agent der ikke har læst dem kan ikke kende dem. Når produktet opdateres og FILETOKEN-værdier ændres, vil agenter der ikke genlæser filerne have forkert token — det er synligt for brugeren med det samme.
-
-### Hvornår tokens opdateres
-
-Når indholdet i en af de to filer ændres substantielt (ny feature, nyt domæne-objekt, ny arkitekturel beslutning), opdateres det tilsvarende FILETOKEN til en ny unik streng. Alle agenter skal derefter genlæse.
+Er du i tvivl om produktadfærd, domænetermer eller arkitekturbeslutninger: læs `.claude/rules/product-context.md` og `.claude/rules/aisalescoach.md` igen frem for at gætte. Svar baseret på antagelser om produktet — uden at have konsulteret disse filer — er ugyldige.
 
 ---
 
@@ -33,7 +16,7 @@ Når indholdet i en af de to filer ændres substantielt (ny feature, nyt domæne
 
 ### Grundreglen
 
-**En forkert men selvsikker svar er langt farligere end et ærligt "jeg ved det ikke".**
+**Et forkert men selvsikkert svar er langt farligere end et ærligt "jeg ved det ikke".**
 
 Et fejlagtigt kodesvar kan introducere bugs, sikkerhedshuller eller arkitekturelle problemer der koster timer at rette. Hellere spørge end gætte.
 
@@ -66,10 +49,11 @@ Det ved jeg ikke med sikkerhed. Jeg kan [give et kvalificeret gæt | efterforske
 |---------|-------------------|
 | Opfinde klasse- eller metodenavne der ikke er verificeret | Søg i kodebasen med Grep/Glob før du nævner dem |
 | Antage at en fil eksisterer uden at checke | Brug Read eller Glob til at bekræfte |
-| Opfinde API-endpoints | Læs controllers eller routes-filen |
+| Opfinde API-endpoints | Læs Endpoints/-filerne eller docs/api-contracts.md |
 | Beskrive hvad kode gør uden at have læst den | Læs koden — selv korte funktioner |
 | Sige "dette virker sikkert" om kode der ikke er reviewet | Kald `security-reviewer` eller marker det som ureviewed |
 | Garantere at kode compilerer uden at køre build | Kør `dotnet build` eller marker som "ikke verificeret" |
+| Rapportere en fase som færdig når build/tests fejler | Rapportér den faktiske status med output |
 
 ### Konflikter mellem viden og observation
 
@@ -105,8 +89,6 @@ Hvis en specialist-agent har truffet en beslutning (fx `stt-specialist` har besl
 Brug dette format:
 
 ```
-*[token]-read*
-
 ⚠ Jeg kan ikke svare med sikkerhed på dette uden at [læse X | søge i kodebasen | spørge brugeren om Y].
 
 Hvad jeg ved: [det du faktisk ved]

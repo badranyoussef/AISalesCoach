@@ -1,5 +1,4 @@
 # AiSalesCoach — Security by Design
-<!-- FILETOKEN: SbD9k -->
 
 Sikkerhedsregler gælder for ALT kode. Ingen undtagelser.
 

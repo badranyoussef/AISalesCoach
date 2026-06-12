@@ -1,5 +1,4 @@
 # AiSalesCoach — Code Standards
-<!-- FILETOKEN: CoS4m -->
 
 ## Test coverage — ikke optionel
 
@@ -21,13 +20,21 @@ En feature er **ikke done** uden tests. `tdd-guide` skal altid involveres.
 ```
 tests/
   AiSalesCoach.Domain.Tests/
-  AiSalesCoach.Application.Tests/
+  AiSalesCoach.Application.Tests/           ← unit tests (mock repos, in-memory SQLite)
     UseCases/
       Auth/
-        LoginCommandHandlerTests.cs       ← spejler Application/UseCases/Auth/LoginCommandHandler.cs
+        LoginCommandHandlerTests.cs
         RefreshTokenCommandHandlerTests.cs
       Coaching/
         GenerateHintsUseCaseTests.cs
+  AiSalesCoach.Api.Tests/                   ← integration tests (real HTTP + real DB)
+    Infrastructure/
+      AiSalesCoachWebApplicationFactory.cs  ← WebApplicationFactory<Program> + Testcontainers
+    Endpoints/
+      Auth/
+        LoginEndpointTests.cs
+      Sessions/
+        CreateSessionEndpointTests.cs
 ```
 
 Navngivning: `MethodName_Scenario_ExpectedResult`
@@ -42,7 +49,41 @@ public async Task Handle_InvalidPassword_ReturnsFailure() { }
 public async Task Handle_NonExistentUser_ReturnsFailure() { }
 ```
 
-Brug **in-memory SQLite** (Microsoft.EntityFrameworkCore.InMemory) til repository tests. Aldrig mock DbContext direkte.
+Brug **in-memory SQLite** (Microsoft.EntityFrameworkCore.InMemory) til Application-laget unit tests. Aldrig mock DbContext direkte.
+
+## Integration tests — per API endpoint
+
+Hvert API-endpoint **skal** have integration tests i `tests/AiSalesCoach.Api.Tests/`.
+
+**Stack:**
+- `Microsoft.AspNetCore.Mvc.Testing` — `WebApplicationFactory<Program>` som HTTP-testhost
+- `Testcontainers.PostgreSql` — PostgreSQL i Docker-container under testkørsel
+- xUnit med `IAsyncLifetime` til container-lifecycle
+
+**Krav per endpoint** (minimum to tests):
+- Happy path (200/201 med forventet response)
+- Primær fejlcase (401 Unauthorized, 400 Bad Request, eller 404 Not Found)
+
+**Mønster:**
+```csharp
+public class LoginEndpointTests : IClassFixture<AiSalesCoachWebApplicationFactory>
+{
+    private readonly HttpClient _client;
+
+    public LoginEndpointTests(AiSalesCoachWebApplicationFactory factory)
+    {
+        _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task Login_ValidCredentials_Returns200WithTokens() { }
+
+    [Fact]
+    public async Task Login_InvalidPassword_Returns401() { }
+}
+```
+
+**Forudsætning:** Testcontainers kræver Docker — kørende lokalt og i CI/CD.
 
 ## Result<T> — ingen exceptions til flow control
 
@@ -86,6 +127,40 @@ Exceptions er til uventede runtime-fejl — ikke til forretningslogik.
 | React komponent | PascalCase | `HintCard`, `FrameworkCoverageBar`, `LiveSession` |
 | React hook | `use`-prefix | `useSession`, `useHints`, `useApiClient` |
 | Zustand store | `use*Store` | `useSessionStore`, `useFrameworkStore` |
+
+## Minimal API — endpoint pattern
+
+Endpoints er **statiske extension methods på `RouteGroupBuilder`**, én fil per feature:
+
+```csharp
+// src/api/AiSalesCoach.Api/Endpoints/Auth/AuthEndpoints.cs
+public static class AuthEndpoints
+{
+    public static RouteGroupBuilder MapAuthEndpoints(this RouteGroupBuilder group)
+    {
+        group.MapPost("/login", async (LoginRequest req, ISender mediator, CancellationToken ct) =>
+        {
+            var result = await mediator.Send(new LoginCommand(req.Email, req.Password), ct);
+            return result.IsSuccess ? Results.Ok(result.Value) : Results.Unauthorized();
+        })
+        .WithName("Login")
+        .AllowAnonymous();
+
+        return group;
+    }
+}
+
+// src/api/AiSalesCoach.Api/Program.cs — registrering
+app.MapGroup("/api/auth").MapAuthEndpoints();
+app.MapGroup("/api/sessions").RequireAuthorization().MapSessionEndpoints();
+```
+
+**Regler:**
+- Ingen controllers — nogensinde
+- Hvert endpoint-kald: kun `mediator.Send()` + `Results.*` returnværdi. Ingen forretningslogik.
+- `[Authorize]` → `RequireAuthorization()` på `MapGroup` — ikke per endpoint medmindre undtagelse
+- `AllowAnonymous()` kun på `/auth/login` og `/auth/refresh`
+- Endpoint-filer: `src/api/AiSalesCoach.Api/Endpoints/<Feature>/<Feature>Endpoints.cs`
 
 ## C# records til DTOs
 

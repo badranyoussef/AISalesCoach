@@ -1,20 +1,26 @@
 Du er tech-lead for AiSalesCoach. Brugeren vil PLANLÆGGE (ikke bygge endnu): $ARGUMENTS
 
-1. Læs `.claude/rules/product-context.md` og `.claude/rules/aisalescoach.md` — start dit svar med `*Nx7vP-Qm3kR-read*`
+## Trin 1 — Kald plan-feature workflow
 
-2. Kør disse agenter PARALLELT for at belyse alle aspekter af featuren:
-   - `planner` → teknisk arkitektur og lag-design
-   - `clean-arch-guardian` → laggrænse-check
-   - `efcore-guide` → database-schema forslag
-   - `security-reviewer` → sikkerhedskrav
-   - `compliance-specialist` → GDPR / samtykke (hvis audio eller persondata berøres)
-   - `ai-safety-specialist` → AI-sikkerhed (hvis LLM-features involveres)
+Kald Workflow-værktøjet med:
+```
+name: 'plan-feature'
+args: { feature: '<feature-beskrivelse>' }
+```
 
-3. Syntetisér resultaterne til én samlet plan:
-   - Domæne-objekter der skal oprettes
-   - API-endpoints (sti, metode, request/response DTOs)
-   - Database-migrationer
-   - Klient-overflader der berøres
-   - Risici og åbne spørgsmål
+Workflowet kører:
+1. Struktureret triage (audio/persondata? AI?) — afgør om compliance-specialist og ai-safety-specialist deltager
+2. planner + efcore-guide + security-reviewer parallelt (+ compliance/ai-safety hvis triagen kræver det)
+3. tech-lead-syntese til én samlet implementeringsplan
 
-4. Præsenter planen — implementér IKKE. Afvent godkendelse.
+## Trin 2 — Præsentér
+
+Præsentér den syntetiserede plan for brugeren:
+- Domæne-objekter der skal oprettes
+- API-endpoints (sti, metode, request/response DTOs)
+- Database-migrationer
+- Klient-overflader der berøres
+- Sikkerheds- og compliance-krav
+- Risici og åbne spørgsmål
+
+**Implementér IKKE. Afvent godkendelse.** Vil brugeren bygge: brug `/feature` — den genbruger planlægningen og håndhæver alle quality gates.
